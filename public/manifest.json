@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "App Genie Extension",
+  "author": "Mitchell Blake",
+  "description": "Base Level Extension",
+  "homepage_url": "https://github.com/casendler/",
+  "permissions": [],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["./dist/background.js"]
+    }
+  ],
+  "version": "1.0",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {},
+    "default_title": "App Genie"
+  }
+}
