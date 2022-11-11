@@ -19,8 +19,6 @@ build:
 	yarn build
 	@mkdir -p dist
 	@cp index.html public
-	@cp src/background.js public
-	@cp src/background.js dist
 	@echo 'Renaming files...' 
 	@mv dist/index.html dist/popup.html
 	@echo 'Zipping up build files for upload...'

@@ -14,7 +14,7 @@ import {
   deleteHref,
 } from './util';
 
-(function () {
+(function() {
   const handleForm = async () => {
     let links: Record<string, string> = {};
     let hrefs: string[] = [];

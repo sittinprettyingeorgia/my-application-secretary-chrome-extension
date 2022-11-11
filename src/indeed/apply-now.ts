@@ -1,7 +1,7 @@
 import { REGEX, APPLY } from './constants';
 import { getStoredLinks, setAppInfo, getApplyButton, getNewHref } from './util';
 
-(function () {
+(function() {
   const handleApplication = async () => {
     let links: Record<string, string> = {};
 
@@ -32,8 +32,8 @@ import { getStoredLinks, setAppInfo, getApplyButton, getNewHref } from './util';
           //we want to wait a second to ensure page scripts have loaded.
           try {
             applyNowButton = getApplyButton(currentUrl, links);
-          } catch (e: any) {
-            console.log(e.message);
+          } catch (e) {
+            console.log(e);
             currentUrl = getNewHref(currentUrl, links);
           }
 

@@ -1,9 +1,8 @@
-import { setLinks } from './indeed/util.js';
-
+import func from './test.js';
 /*global chrome*/
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Chrome extension successfully installed!');
-  setLinks();
+  console.log(func);
   return;
 });
 

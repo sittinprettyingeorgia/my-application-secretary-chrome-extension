@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   APPLY,
   APP_INFO,
@@ -15,18 +14,10 @@ import {
  * Store links in local storage
  * @param newLinks
  */
-export const setLinks = async (newLinks?: Record<string, string>) => {
-  //const jobLinks = Object.keys(newLinks);
+export const setLinks = async (newLinks: Record<string, string>) => {
+  const jobLinks = Object.keys(newLinks);
   //this will be replaced with call to Go backend
-  //window.localStorage.setItem(LINKS, JSON.stringify({ jobLinks: jobLinks }));
-  return axios({
-    method: 'POST',
-    url: 'http://localhost:8080/jobLinks',
-    data: JSON.stringify({
-      testFrontUrl: 'testFrontUrl',
-      testFront: 'testFront',
-    }),
-  }).then((response) => console.log(response.data));
+  window.localStorage.setItem(LINKS, JSON.stringify({ jobLinks }));
 };
 
 /**
