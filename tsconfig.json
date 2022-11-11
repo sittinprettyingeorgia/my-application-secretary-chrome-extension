@@ -3,6 +3,7 @@
     "target": "ESNext",
     "outDir": "./dist",
     "useDefineForClassFields": true,
+    "types": ["chrome", "jest"],
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": false,
     "skipLibCheck": true,
