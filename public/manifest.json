@@ -13,7 +13,6 @@
     "clipboardWrite",
     "cookies",
     "geolocation",
-    "loginState",
     "scripting"
   ],
   "background": {
