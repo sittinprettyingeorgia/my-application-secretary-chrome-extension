@@ -1,6 +1,8 @@
+import func from './test.js';
 /*global chrome*/
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Chrome extension successfully installed!');
+  console.log(func);
   return;
 });
 
