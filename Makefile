@@ -18,6 +18,7 @@ build:
 	export GENERATE_SOURCEMAP=false; \
 	yarn build
 	@mkdir -p dist
+	@cp src/index.html public
 	@echo 'Renaming files...' 
 	@mv dist/index.html dist/popup.html
 	@echo 'Zipping up build files for upload...'
