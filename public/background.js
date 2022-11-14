@@ -3,8 +3,7 @@ import fetch from '../src/testMod.js';
 /*global chrome*/
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Chrome extension successfully installed!');
-  const test = fetch();
-  console.log(test);
+  console.log(fetch());
   return;
 });
 
