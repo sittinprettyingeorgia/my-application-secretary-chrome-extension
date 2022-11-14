@@ -2,6 +2,7 @@
   "name": "app-genie",
   "private": true,
   "version": "0.0.1",
+  "module": "commonjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
