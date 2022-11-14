@@ -14,32 +14,31 @@ import {
   deleteHref,
 } from './util';
 
-(function() {
-  const handleForm = async () => {
-    let links = {};
-    let hrefs = [];
+const handleForm = async () => {
+  let links = {};
+  let hrefs = [];
 
-    getStoredLinks(links);
-    hrefs = [...Object.keys(links)];
+  getStoredLinks(links);
+  hrefs = [...Object.keys(links)];
 
-    /**
-     *
-     * @returns Retrieves stored application information.
-     */
-    const getAppInfo = () => {
-      try {
-        const storedAppInfo = window.localStorage.getItem(KEYS.APP_INFO);
-        const result = storedAppInfo && JSON.parse(storedAppInfo);
-        return result;
-      } catch (e) {
-        console.log('THERE IS CURRENTLY NO APP INFO');
-        console.log(e);
-      }
+  /**
+   *
+   * @returns Retrieves stored application information.
+   */
+  const getAppInfo = () => {
+    try {
+      const storedAppInfo = window.localStorage.getItem(KEYS.APP_INFO);
+      const result = storedAppInfo && JSON.parse(storedAppInfo);
+      return result;
+    } catch (e) {
+      console.log('THERE IS CURRENTLY NO APP INFO');
+      console.log(e);
+    }
 
-      return undefined;
-    };
+    return undefined;
+  };
 
-    /*const handleSubmit = () => {
+  /*const handleSubmit = () => {
         if (
           submitButton !== null &&
           submitButton.textContent === SUBMIT.APPLICATION
@@ -49,43 +48,42 @@ import {
         }else if ()
       };*/
 
-    const handleQuestions = (questions) => {
-      const submitButton = retrieveElem(SUBMIT.BUTTON);
-      const questions1 = retrieveElem(QUESTIONS.SELECTOR1);
-      const questions2 = retrieveElem(QUESTIONS.SELECTOR2);
-      //elem.textContent
-      if (questions1 !== null) {
-        //We need to loop through each question in questions
-      }
-    };
-
-    const handleFormInteraction = async () => {
-      try {
-        let currentUrl = window.location.href;
-
-        if (currentUrl.search(REGEX.CONTAINS_FORM) < 0) {
-          const hasLink = hrefs.pop();
-
-          if (hasLink) {
-            window.location.replace(hasLink);
-            currentUrl = hasLink;
-          }
-        }
-
-        console.log('RUNNING APP SCRIPT', Object.keys(links).length);
-
-        setTimeout(() => {
-          handleQuestions(QUESTIONS);
-          deleteHref(links, currentUrl);
-        }, 2000);
-      } catch (e) {
-        console.log('Error Running script');
-        console.log(e);
-      }
-    };
-
-    handleFormInteraction();
+  const handleQuestions = (questions) => {
+    const submitButton = retrieveElem(SUBMIT.BUTTON);
+    const questions1 = retrieveElem(QUESTIONS.SELECTOR1);
+    const questions2 = retrieveElem(QUESTIONS.SELECTOR2);
+    //elem.textContent
+    if (questions1 !== null) {
+      //We need to loop through each question in questions
+    }
   };
 
-  handleForm();
-})();
+  const handleFormInteraction = async () => {
+    try {
+      let currentUrl = window.location.href;
+
+      if (currentUrl.search(REGEX.CONTAINS_FORM) < 0) {
+        const hasLink = hrefs.pop();
+
+        if (hasLink) {
+          window.location.replace(hasLink);
+          currentUrl = hasLink;
+        }
+      }
+
+      console.log('RUNNING APP SCRIPT', Object.keys(links).length);
+
+      setTimeout(() => {
+        handleQuestions(QUESTIONS);
+        deleteHref(links, currentUrl);
+      }, 2000);
+    } catch (e) {
+      console.log('Error Running script');
+      console.log(e);
+    }
+  };
+
+  handleFormInteraction();
+};
+
+export default handleForm;
