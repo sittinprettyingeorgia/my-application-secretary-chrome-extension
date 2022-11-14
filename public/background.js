@@ -1,8 +1,10 @@
-import func from './test.js';
+import fetch from '../src/testMod.js';
+
 /*global chrome*/
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Chrome extension successfully installed!');
-  console.log(func);
+  const test = fetch();
+  console.log(test);
   return;
 });
 

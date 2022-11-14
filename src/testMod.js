@@ -1,1 +1,5 @@
-export const test = '16';
+const fetch = () => {
+  return 'Test';
+};
+
+export default fetch;
