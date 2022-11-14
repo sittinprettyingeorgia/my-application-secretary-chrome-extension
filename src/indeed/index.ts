@@ -1,2 +1,2 @@
-import { setLinks } from './util';
+import { setLinks } from './util.js';
 export default setLinks;
