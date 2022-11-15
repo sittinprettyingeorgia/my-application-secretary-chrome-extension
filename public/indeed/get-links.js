@@ -7,13 +7,10 @@ import {
   click,
 } from './util';
 
-export const handleLinksRetrieval = async () => {
+const handleLinksRetrieval = async () => {
   const limit = 600;
-  let links = {};
-  let hrefs = [];
-
-  getStoredLinks(links);
-  hrefs = [...Object.keys(links)];
+  let links = getStoredLinks(links);
+  let hrefs = [...Object.keys(links)];
 
   const gotoNextPage = async () => {
     const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
@@ -48,7 +45,7 @@ export const handleLinksRetrieval = async () => {
       setLinks(links);
       console.log('LINKS LENGTH: after script run ', Object.keys(links));
 
-      gotoNextPage();
+      await gotoNextPage();
     } catch (e) {
       // TODO:
       // This needs to be replaced with an error logging system.
@@ -59,7 +56,7 @@ export const handleLinksRetrieval = async () => {
   };
 
   if (hrefs.length < limit) {
-    getPageJobLinks();
+    await getPageJobLinks();
   } else {
     // TODO:
     // This needs to be replaced with a toast messaging system.
@@ -67,6 +64,7 @@ export const handleLinksRetrieval = async () => {
   }
 };
 
+export default handleLinksRetrieval;
 //older
 /*
 (function () {

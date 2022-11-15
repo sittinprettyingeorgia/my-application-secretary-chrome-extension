@@ -13,7 +13,8 @@
     "clipboardWrite",
     "cookies",
     "geolocation",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "background": {
     "service_worker": "background.js",

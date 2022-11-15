@@ -14,13 +14,18 @@ import {
  * Store links in local storage
  * @param newLinks
  */
-export const setLinks = async (newLinks) => {
+export const setLinks = (newLinks) => {
   if (!newLinks) {
     return;
   }
+
   const jobLinks = Object.keys(newLinks);
+  chrome.storage.local.set({ LINKS: jobLinks }, function() {
+    console.log('jobLinks are set to ' + jobLinks);
+  });
+
   //this will be replaced with call to Go backend
-  window.localStorage.setItem(LINKS, JSON.stringify({ jobLinks }));
+  //window.localStorage.setItem(LINKS, JSON.stringify({ jobLinks }));
 };
 
 /**
@@ -61,28 +66,22 @@ export const retrieveElem = (selector) => {
 
 /**
  * Retrieves our links object from local storage.
- * @param {Record<string, string>}links the link object to be added too
  * @returns {Record<string, string>}
  */
-export const getStoredLinks = async (links) => {
+export const getStoredLinks = () => {
+  const links = {};
+
   try {
-    //this should be replaced with call to Go backend
-    const newLinksArr = localStorage.getItem(LINKS);
-
-    const temp = newLinksArr && JSON.parse(newLinksArr);
-
-    var newLinks = {};
-
-    if (temp) {
-      for (const s of temp) {
-        newLinks[s] = s;
-      }
-    }
-
-    return newLinks;
+    chrome.storage.sync.get([LINKS], function(result) {
+      links = result;
+      console.log('jobLinks are ' + result);
+    });
   } catch (e) {
-    return links;
+    console.log('retrieving links failed');
+    console.log(e);
   }
+
+  return links;
 };
 
 export const click = async (elem) => {
@@ -93,6 +92,9 @@ export const click = async (elem) => {
  */
 export const setAppInfo = (url) => {
   const appInfo = getAppInfo(url);
+  chrome.storage.sync.set({ key: value }, function() {
+    console.log('Value is set to ' + value);
+  });
 
   if (!appInfo) {
     return;
