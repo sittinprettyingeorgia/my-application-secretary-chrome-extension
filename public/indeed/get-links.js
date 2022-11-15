@@ -9,7 +9,7 @@ import {
 
 const handleLinksRetrieval = async () => {
   const limit = 600;
-  let links = getStoredLinks(links);
+  let links = getStoredLinks();
   let hrefs = [...Object.keys(links)];
 
   const gotoNextPage = async () => {
