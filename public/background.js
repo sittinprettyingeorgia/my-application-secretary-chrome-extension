@@ -16,7 +16,7 @@ import {
   retrieveElems,
   click,
 } from './indeed/util.js';
-
+import { test } from './indeed/get-links-old.js';
 /*global chrome*/
 // chrome.runtime.onInstalled.addListener(async () => {
 //   console.log('Chrome extension successfully installed!');
@@ -32,7 +32,7 @@ chrome.tabs.onUpdated.addListener((_tabId, changeInfo, _tab) => {
   console.log('change url:', changeInfo.url);
   chrome.scripting.executeScript({
     target: { tabId: _tab.id },
-    files: ['./indeed/get-links-old.js'],
+    func: test,
   });
 });
 
