@@ -11,6 +11,14 @@ const handleLinksRetrieval = async () => {
   const limit = 600;
   let links = getStoredLinks();
   let hrefs = [...Object.keys(links)];
+  let endTest = false;
+
+  const getActiveTab = async () => {
+    let queryOptions = { active: true, lastFocusedWindow: true };
+    // `tab` will either be a `tabs.Tab` instance or `undefined`.
+    let [tab] = await chrome.tabs.query(queryOptions);
+    return tab;
+  };
 
   const gotoNextPage = async () => {
     const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
@@ -30,8 +38,12 @@ const handleLinksRetrieval = async () => {
 
   const getPageJobLinks = async () => {
     try {
-      window.location.replace(REGEX.JOB_WINDOW);
-      console.log('LINKS LENGTH: before script run ', Object.keys(links));
+      chrome.tabs.create({
+        url: `${REGEX.JOB_WINDOW}`,
+      });
+      console.log('we have created a tab');
+      throw new Error('test works');
+      /*console.log('LINKS LENGTH: before script run ', Object.keys(links));
 
       const jobLinks = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
 
@@ -45,17 +57,18 @@ const handleLinksRetrieval = async () => {
       setLinks(links);
       console.log('LINKS LENGTH: after script run ', Object.keys(links));
 
-      await gotoNextPage();
+      await gotoNextPage();*/
     } catch (e) {
       // TODO:
       // This needs to be replaced with an error logging system.
       // preferably stored in json/local db.
+      endTest = true;
       console.log('Error Running script');
       console.log(e);
     }
   };
 
-  if (hrefs.length < limit) {
+  if (!endTest) {
     await getPageJobLinks();
   } else {
     // TODO:
@@ -64,63 +77,11 @@ const handleLinksRetrieval = async () => {
   }
 };
 
+/*chrome.runtime.onInstalled.addListener(async () => {
+  chrome.tabs.create({
+    url: 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14',
+  });
+  return;
+});*/
+
 export default handleLinksRetrieval;
-//older
-/*
-(function () {
-  const gotoNext = async (elem) => {
-    elem.click();
-  };
-
-  const jobWindow = 'https://www.indeed.com/jobs?q=software&l=Remote&start=0';
-  const containsJobs = /\bhttps:\/\/www.indeed.com\/jobs\b/gi;
-
-  const getLinks = async () => {
-    const limit = 100;
-    try {
-      let links = {};
-      try {
-        const temp = JSON.parse(localStorage.getItem('links'));
-        if (temp) links = { ...temp };
-      } catch (e) {
-        console.log('Error retrieving links');
-        console.log(e);
-      }
-
-      let myWindow = window.location.href;
-
-      if (myWindow.search(containsJobs) < 0) {
-        window.location.replace(jobWindow);
-      }
-      console.log('LINKS LENGTH: before script run ', Object.keys(links));
-
-      if (Object.keys(links).length < limit) {
-        const jobLinks = document.querySelectorAll('.jobTitle a');
-        jobLinks?.forEach((link) => {
-          const href = link.getAttribute('href');
-          links[href] = href;
-        });
-
-        console.log('LINKS LENGTH: after script run ', Object.keys(links));
-        window.localStorage.setItem('links', JSON.stringify(links));
-
-        const nav = document.querySelector('nav[role=navigation');
-        nav?.scrollIntoView();
-
-        const paginationNext = document.querySelector(
-          'a[data-testid=pagination-page-next]'
-        );
-        if (paginationNext !== null) {
-          await gotoNext(paginationNext);
-        } else {
-          await gotoNext(document.querySelector('a[aria-label=Next]'));
-        }
-      }
-    } catch (e) {
-      console.log('Error Running script');
-      console.log(e);
-    }
-  };
-
-  getLinks();
-})();*/

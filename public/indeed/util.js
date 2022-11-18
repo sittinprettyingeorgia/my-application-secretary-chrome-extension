@@ -72,7 +72,7 @@ export const getStoredLinks = () => {
   const links = {};
 
   try {
-    chrome.storage.sync.get([LINKS], function(result) {
+    chrome.storage.sync.get([LINKS], (result) => {
       links = result;
       console.log('jobLinks are ' + result);
     });

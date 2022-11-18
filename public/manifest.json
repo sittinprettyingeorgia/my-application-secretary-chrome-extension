@@ -16,6 +16,14 @@
     "scripting",
     "storage"
   ],
+  "host_permissions": [
+    "https://www.indeed.com/*",
+    "https://apply.workable.com/*",
+    "https://gdc.indeed.com/*",
+    "https://m5.apply.indeed.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -23,7 +31,6 @@
   "minimum_chrome_version": "92",
   "version": "0.0.1",
   "action": {
-    "default_popup": "popup.html",
     "default_icon": {},
     "default_title": "App Genie"
   }
