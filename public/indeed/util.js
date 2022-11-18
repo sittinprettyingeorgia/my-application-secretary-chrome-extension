@@ -1,15 +1,3 @@
-import {
-  APPLY,
-  APP_INFO,
-  PREFIX,
-  KEYS,
-  HTML_ELEMENT,
-  INDEED_QUERY_SELECTOR,
-  LINKS,
-  HREF,
-  MOUSE,
-} from './constants';
-
 /**
  * Store links in local storage
  * @param newLinks
@@ -100,7 +88,7 @@ export const setAppInfo = (url) => {
     return;
   }
 
-  window.localStorage.setItem(KEYS.APP_INFO, JSON.stringify(appInfo));
+  //window.localStorage.setItem(KEYS.APP_INFO, JSON.stringify(appInfo));
 };
 
 /**
@@ -188,6 +176,6 @@ export const deleteHref = (links, hrefToBeDeleted) => {
   delete links[appInfo.href];
 
   setLinks(links);
-  window.localStorage.setItem(LINKS, JSON.stringify(links));
+  //window.localStorage.setItem(LINKS, JSON.stringify(links));
   console.log('FINISHED RUNNING APP SCRIPT', Object.keys(links).length);
 };

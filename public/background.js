@@ -1,5 +1,16 @@
-// import handleLinksRetrieval from './indeed/get-links.js';
-// import { REGEX } from './indeed/constants.js';
+/*imports need to be uploaded in order. and cannot be imported into each other*/
+import {
+  APPLY,
+  APP_INFO,
+  PREFIX,
+  KEYS,
+  HTML_ELEMENT,
+  INDEED_QUERY_SELECTOR,
+  LINKS,
+  HREF,
+} from './indeed/constants.js';
+import * as util from './indeed/util.js';
+
 /*global chrome*/
 // chrome.runtime.onInstalled.addListener(async () => {
 //   console.log('Chrome extension successfully installed!');
@@ -7,11 +18,11 @@
 // });
 
 chrome.action.onClicked.addListener((tab) => {
-  // let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
-  // chrome.tabs.create({ url });
+  let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
+  chrome.tabs.create({ url });
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    files: ['alert.js'],
+    files: ['./indeed/get-links-old.js'],
   });
 });
 // chrome.action.onClicked.addListener((tab) => {

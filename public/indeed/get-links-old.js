@@ -1,16 +1,8 @@
-import { INDEED_QUERY_SELECTOR, HREF, REGEX } from './constants';
-import {
-  setLinks,
-  getStoredLinks,
-  retrieveElem,
-  retrieveElems,
-  click,
-} from './util';
-
 const handleLinksRetrieval = async () => {
   const limit = 600;
   let links = getStoredLinks();
   let hrefs = [...Object.keys(links)];
+  console.log('insdie get links');
 
   const gotoNextPage = async () => {
     const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
