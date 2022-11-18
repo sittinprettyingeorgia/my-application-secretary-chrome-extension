@@ -1,4 +1,4 @@
-const handleLinksRetrieval = async () => {
+export const handleLinksRetrieval = async () => {
   const limit = 600;
   let links = getStoredLinks();
   let hrefs = [...Object.keys(links)];
@@ -48,7 +48,8 @@ const handleLinksRetrieval = async () => {
   };
 
   if (hrefs.length < limit) {
-    await getPageJobLinks();
+    alert('inside');
+    //await getPageJobLinks();
   } else {
     // TODO:
     // This needs to be replaced with a toast messaging system.
@@ -56,7 +57,6 @@ const handleLinksRetrieval = async () => {
   }
 };
 
-export default handleLinksRetrieval;
 //older
 /*
 (function () {

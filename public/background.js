@@ -9,7 +9,13 @@ import {
   LINKS,
   HREF,
 } from './indeed/constants.js';
-import * as util from './indeed/util.js';
+import {
+  setLinks,
+  getStoredLinks,
+  retrieveElem,
+  retrieveElems,
+  click,
+} from './indeed/util.js';
 
 /*global chrome*/
 // chrome.runtime.onInstalled.addListener(async () => {
@@ -20,11 +26,16 @@ import * as util from './indeed/util.js';
 chrome.action.onClicked.addListener((tab) => {
   let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
   chrome.tabs.create({ url });
+});
+
+chrome.tabs.onUpdated.addListener((_tabId, changeInfo, _tab) => {
+  console.log('change url:', changeInfo.url);
   chrome.scripting.executeScript({
-    target: { tabId: tab.id },
+    target: { tabId: _tab.id },
     files: ['./indeed/get-links-old.js'],
   });
 });
+
 // chrome.action.onClicked.addListener((tab) => {
 //   chrome.scripting.executeScript({
 //     target: { tabId: tab.id },
