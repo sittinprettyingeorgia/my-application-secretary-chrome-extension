@@ -1,4 +1,4 @@
-export const handleLinksRetrieval = async () => {
+(async () => {
   const limit = 600;
   let links = getStoredLinks();
   let hrefs = [...Object.keys(links)];
@@ -55,7 +55,7 @@ export const handleLinksRetrieval = async () => {
     // This needs to be replaced with a toast messaging system.
     alert('FINISHED COLLECTING JOBS!!!!!!');
   }
-};
+})();
 
 //older
 /*
