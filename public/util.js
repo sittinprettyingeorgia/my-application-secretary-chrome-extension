@@ -1,5 +1,5 @@
 // Asynchronously retrieve data from storage.sync, then cache it.
-const initStorageCache = getAllStorageSyncData().then((items) => {
+export const initStorageCache = getAllStorageSyncData().then((items) => {
   // Where we will expose all the data we retrieve from storage.sync.
   const storageCache = {};
   // Copy the data retrieved from storage into storageCache.
@@ -10,11 +10,11 @@ const initStorageCache = getAllStorageSyncData().then((items) => {
 //
 // Note: Once the Storage API gains promise support, this function
 // can be greatly simplified.
-const getAllStorageSyncData = () => {
+export const getAllStorageSyncData = (key) => {
   // Immediately return a promise and start asynchronous work
   return new Promise((resolve, reject) => {
     // Asynchronously fetch all data from storage.sync.
-    chrome.storage.sync.get(null, (items) => {
+    chrome.storage.sync.get(key, (items) => {
       // Pass any observed errors down the promise chain.
       if (chrome.runtime.lastError) {
         return reject(chrome.runtime.lastError);
@@ -25,14 +25,16 @@ const getAllStorageSyncData = () => {
   });
 };
 
-const storageCache = {};
-chrome.action.onClicked.addListener(async (tab) => {
-  try {
-    storageCache = await initStorageCache;
-  } catch (e) {
-    // Handle error that occurred during storage initialization.
+/**
+ * Add to our local storage
+ * @param newLinks
+ */
+export const setStorage = (key, val) => {
+  if (!val || !key) {
+    return;
   }
-  // Normal action handler logic.
-});
 
-export { storageCache };
+  chrome.storage.sync.set({ key: val }, () => {
+    console.log('Value is set to ' + val);
+  });
+};

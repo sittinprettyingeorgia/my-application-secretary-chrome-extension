@@ -1,24 +1,3 @@
-export const test = () => console.log('Test');
-/**
- * Retrieves our links object from local storage.
- * @returns {Record<string, string>}
- */
-const getStoredLinks = () => {
-  const links = {};
-
-  try {
-    chrome.storage.sync.get([LINKS], (result) => {
-      links = result;
-      console.log('jobLinks are ' + result);
-    });
-  } catch (e) {
-    console.log('retrieving links failed');
-    console.log(e);
-  }
-
-  return links;
-};
-
 const limit = 600;
 let links = getStoredLinks();
 let hrefs = [...Object.keys(links)];

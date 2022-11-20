@@ -1,3 +1,4 @@
+/*global chrome*/
 /*imports need to be uploaded in order. and cannot be imported into each other*/
 import {
   APPLY,
@@ -9,21 +10,23 @@ import {
   LINKS,
   HREF,
 } from './indeed/constants.js';
-import {
-  setLinks,
-  getStoredLinks,
-  retrieveElem,
-  retrieveElems,
-  click,
-} from './indeed/util.js';
-import { test } from './indeed/get-links-old.js';
-/*global chrome*/
-// chrome.runtime.onInstalled.addListener(async () => {
-//   console.log('Chrome extension successfully installed!');
-//   return;
-// });
+import { getAllStorageSyncData, test } from './indeed/get-links.js';
 
-chrome.action.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener(async (tab) => {
+  // Asynchronously retrieve data from storage.sync, then cache it.
+  let appInfo = {};
+  try {
+    appInfo = {
+      ...(await getAllStorageSyncData('indeed').then((items) => items)),
+    };
+  } catch (e) {
+    // Handle error that occurred during storage initialization.
+    console.log('could not retrieve application information');
+    console.log(e);
+  }
+
+  console.log('success info retrieval');
+
   let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
   chrome.tabs.create({ url });
 });
