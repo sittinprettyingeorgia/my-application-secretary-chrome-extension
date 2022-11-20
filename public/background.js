@@ -10,9 +10,27 @@ import {
   LINKS,
   HREF,
 } from './indeed/constants.js';
-import { handleJobLinksRetrieval } from './indeed/get-links.js';
+import { handleJobLinksRetrieval, setStorage } from './indeed/get-links.js';
 
-handleJobLinksRetrieval();
+try {
+  let mockAppInfo = {
+    applicationName: 'indeed',
+    user: {
+      userId: '1',
+      jobLinksLimit: 600,
+      firstName: 'Mitchell',
+      lastName: 'Blake',
+      jobLinks: {},
+      jobPostingPreferredAge: 7,
+    },
+  };
+
+  setStorage('indeed', mockAppInfo);
+  handleJobLinksRetrieval();
+} catch (e) {
+  console.log(e?.message);
+  console.log(e);
+}
 
 // chrome.tabs.onUpdated.addListener((_tabId, changeInfo, _tab) => {
 //   console.log('change url:', changeInfo.url);

@@ -196,6 +196,8 @@ export const setStorage = (key, val) => {
   chrome.storage.sync.set({ key: val }, () => {
     console.log('Value is set to ' + val);
   });
+
+  console.log('Successfully stored information');
 };
 
 /**
@@ -347,7 +349,7 @@ export const deleteHref = (links, hrefToBeDeleted) => {
 /**
  * crawls pages and collects job links
  */
-export const collectLinks = async (appInfo) => {
+export const collectLinks = async (user) => {
   const gotoNextPage = async () => {
     const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
     nav?.scrollIntoView();
@@ -364,23 +366,29 @@ export const collectLinks = async (appInfo) => {
     }
   };
 
-  const getPageJobLinks = async () => {
+  const getPageJobLinks = async (user) => {
     try {
       // TODO: this url should be updated later to be dynamic based on user preferences.
-      let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${appInfo.user.jobPostingPreferredAge}`;
+      let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${user.jobPostingPreferredAge}`;
       await chrome.tabs.create({ url });
-      console.log('LINKS LENGTH: before script run ', appInfo.user.jobLinks);
+      console.log(
+        'LINKS LENGTH: before script run ',
+        Object.keys(user.jobLinks).length
+      );
 
       const jobLinks = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
 
       jobLinks?.forEach((link) => {
         const href = link.getAttribute(HREF);
         if (href) {
-          appInfo.user.jobLinks[href] = href;
+          user.jobLinks[href] = href;
         }
       });
 
-      console.log('LINKS LENGTH: after script run ', Object.keys(links));
+      console.log(
+        'LINKS LENGTH: after script run ',
+        Object.keys(user.jobLinks).length
+      );
       await gotoNextPage();
     } catch (e) {
       // TODO:
@@ -391,11 +399,13 @@ export const collectLinks = async (appInfo) => {
     }
   };
 
-  while (appInfo.user.jobLinks.length < appInfo.user.jobLinksLimit) {
+  while (user.jobLinks.length < user.jobLinksLimit) {
     await getPageJobLinks();
   }
 
   console.log('FINISHED COLLECTING JOBS!!!!!!');
+  console.log('Job Links Collected: ' + user.jobLinks.length);
+  return jobLinks;
 };
 
 /**
@@ -405,10 +415,16 @@ export const handleJobLinksRetrieval = () => {
   chrome.action.onClicked.addListener(async (tab) => {
     // Asynchronously retrieve data from storage.sync, then cache it.
     let appInfo = {};
+
     try {
       appInfo = {
         ...(await getAllStorageSyncData('indeed').then((items) => items)),
       };
+
+      if (!appInfo?.user) {
+        await chrome.tabs.create({ url: 'onboarding.html' });
+        throw new Error('Please create a user');
+      }
     } catch (e) {
       // Handle error that occurred during storage initialization.
       console.log('could not retrieve application information');
@@ -417,12 +433,13 @@ export const handleJobLinksRetrieval = () => {
 
     console.log('success info retrieval');
 
-    let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
-    await chrome.tabs.create({ url });
-    let testFunc = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: test,
-    });
+    appInfo.user.jobLinks = {
+      ...(await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: collectLinks,
+      })),
+    };
+
     console.log(testFunc[0].result);
   });
 };
