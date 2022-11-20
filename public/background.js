@@ -10,31 +10,9 @@ import {
   LINKS,
   HREF,
 } from './indeed/constants.js';
-import { getAllStorageSyncData, test } from './indeed/get-links.js';
+import { handleJobLinksRetrieval } from './indeed/get-links.js';
 
-chrome.action.onClicked.addListener(async (tab) => {
-  // Asynchronously retrieve data from storage.sync, then cache it.
-  let appInfo = {};
-  try {
-    appInfo = {
-      ...(await getAllStorageSyncData('indeed').then((items) => items)),
-    };
-  } catch (e) {
-    // Handle error that occurred during storage initialization.
-    console.log('could not retrieve application information');
-    console.log(e);
-  }
-
-  console.log('success info retrieval');
-
-  let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
-  await chrome.tabs.create({ url });
-  let testFunc = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: test,
-  });
-  console.log(testFunc[0].result);
-});
+handleJobLinksRetrieval();
 
 // chrome.tabs.onUpdated.addListener((_tabId, changeInfo, _tab) => {
 //   console.log('change url:', changeInfo.url);
