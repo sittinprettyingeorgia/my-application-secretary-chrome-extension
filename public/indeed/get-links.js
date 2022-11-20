@@ -1,4 +1,4 @@
-export const test = () => console.log('Test');
+export const test = () => 'Test';
 export const getAllStorageSyncData = (key) => {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(key, (items) => {

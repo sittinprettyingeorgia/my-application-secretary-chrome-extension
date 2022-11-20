@@ -28,16 +28,21 @@ chrome.action.onClicked.addListener(async (tab) => {
   console.log('success info retrieval');
 
   let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
-  chrome.tabs.create({ url });
-});
-
-chrome.tabs.onUpdated.addListener((_tabId, changeInfo, _tab) => {
-  console.log('change url:', changeInfo.url);
-  chrome.scripting.executeScript({
-    target: { tabId: _tab.id },
+  await chrome.tabs.create({ url });
+  let testFunc = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
     func: test,
   });
+  console.log(testFunc[0].result);
 });
+
+// chrome.tabs.onUpdated.addListener((_tabId, changeInfo, _tab) => {
+//   console.log('change url:', changeInfo.url);
+//   chrome.scripting.executeScript({
+//     target: { tabId: _tab.id },
+//     func: test,
+//   });
+// });
 
 // chrome.action.onClicked.addListener((tab) => {
 //   chrome.scripting.executeScript({
