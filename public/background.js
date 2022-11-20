@@ -1,17 +1,6 @@
 /*global chrome*/
 /*imports need to be uploaded in order. and cannot be imported into each other*/
-import {
-  APPLY,
-  APP_INFO,
-  PREFIX,
-  KEYS,
-  HTML_ELEMENT,
-  INDEED_QUERY_SELECTOR,
-  LINKS,
-  HREF,
-} from './indeed/constants.js';
 import { handleJobLinksRetrieval, setStorage } from './indeed/get-links.js';
-
 try {
   let mockAppInfo = {
     applicationName: 'indeed',
@@ -24,8 +13,10 @@ try {
       jobPostingPreferredAge: 7,
     },
   };
-
+  console.log('mock info constructed');
   setStorage('indeed', mockAppInfo);
+
+  console.log('storage is set');
   handleJobLinksRetrieval();
 } catch (e) {
   console.log(e?.message);
