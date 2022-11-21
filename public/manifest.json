@@ -28,6 +28,15 @@
     "service_worker": "background.js",
     "type": "module"
   },
+  "externally_connectable": {
+    "ids": ["*"],
+    "matches": [
+      "https://www.indeed.com/*",
+      "https://apply.workable.com/*",
+      "https://gdc.indeed.com/*",
+      "https://m5.apply.indeed.com/*"
+    ]
+  },
   "minimum_chrome_version": "92",
   "version": "0.0.1",
   "action": {

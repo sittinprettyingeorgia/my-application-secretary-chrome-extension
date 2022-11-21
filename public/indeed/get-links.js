@@ -1,5 +1,19 @@
-export const test = () => 'Test';
+let port;
 
+const connectMessenger = () => {
+  console.log('inside connect messenger');
+  port = chrome.runtime.connect({ name: 'get-links' });
+  port.postMessage({ status: 'connecting to messenger' });
+  port.onMessage.addListener(function(msg) {
+    console.log(JSON.stringify(msg));
+    if (msg.question === 'connected')
+      port.postMessage({ status: 'connected successfully' });
+  });
+};
+
+setTimeout(() => connectMessenger, 1000);
+
+export const test = () => 'Test';
 export const DEFAULTS = {
   limit: 600,
 };
@@ -194,7 +208,7 @@ export const getAllStorageSyncData = (key) => {
 /**
  * Sets current application information to local storage to use during form
  */
-export const setStorage = (key, val) => {
+export const setStorage = async (key, val) => {
   if (!val || !key) {
     return;
   }
@@ -293,7 +307,6 @@ export const handleApplyNowNotFound = (elem, currentUrl, links) => {
  * @throws Exception if this button is not an Apply Now Button.
  * @returns
  */
-
 export const getApplyButton = (currentUrl, links) => {
   //we may need to extract this document value from the applyWindow parameter.
   const tryId = document
@@ -336,201 +349,4 @@ export const deleteHref = (links, hrefToBeDeleted) => {
   //window.localStorage.setItem(LINKS, JSON.stringify(links));
   console.log('FINISHED RUNNING APP SCRIPT', Object.keys(links).length);
   return links;
-};
-function setupDetails(action, args, id) {
-  // Wrap the async function in an await and a runtime.sendMessage with the result
-  // This should always call runtime.sendMessage, even if an error is thrown
-  const wrapAsyncSendMessage = (action) =>
-    `(async function () {
-    const result = { asyncFuncID: '${id}' };
-    try {
-        result.content = await (${action})(${args});
-    }
-    catch(x) {
-        // Make an explicit copy of the Error properties
-        result.error = { 
-            message: x.message, 
-            arguments: x.arguments, 
-            type: x.type, 
-            name: x.name, 
-            stack: x.stack 
-        };
-    }
-    finally {
-        // Always call sendMessage, as without it this might loop forever
-        chrome.runtime.sendMessage(result);
-    }
-})()`;
-
-  // Apply this wrapper to the code passed
-  let execArgs = {};
-  if (typeof action === 'function' || typeof action === 'string')
-    // Passed a function or string, wrap it directly
-    execArgs.code = wrapAsyncSendMessage(action);
-  else if (action.file)
-    throw new Error(
-      `Cannot execute ${action.file}. File based execute scripts are not supported.`
-    );
-  else
-    throw new Error(
-      `Cannot execute ${JSON.stringify(
-        action
-      )}, it must be a function, string, or have a code property.`
-    );
-
-  return execArgs;
-}
-
-function promisifyRuntimeMessage(id) {
-  // We don't have a reject because the finally in the script wrapper should ensure this always gets called.
-  return new Promise((resolve) => {
-    const listener = (request) => {
-      // Check that the message sent is intended for this listener
-      if (request && request.asyncFuncID === id) {
-        // Remove this listener
-        chrome.runtime.onMessage.removeListener(listener);
-        resolve(request);
-      }
-
-      // Return false as we don't want to keep this channel open https://developer.chrome.com/extensions/runtime#event-onMessage
-      return false;
-    };
-
-    chrome.runtime.onMessage.addListener(listener);
-  });
-}
-
-chrome.tabs.executeAsyncFunction = async function(tabId, args, action) {
-  // Generate a random 4-char key to avoid clashes if called multiple times
-  const id = Math.floor((1 + Math.random()) * 0x10000)
-    .toString(16)
-    .substring(1);
-
-  const message = promisifyRuntimeMessage(id);
-
-  // This will return a serialised promise, which will be broken
-  chrome.scripting.executeScript({
-    target: { tabId },
-    func: setupDetails,
-    args: [action, args, id],
-  });
-
-  // Wait until we have the result message
-  const { content, error } = await message;
-
-  if (error)
-    throw new Error(`Error thrown in execution script: ${error.message}.
-Stack: ${error.stack}`);
-
-  return content;
-};
-
-/**
- * crawls pages and collects job links
- */
-export const collectLinks = async (user) => {
-  let { jobLinks = {}, jobPostingPreferredAge = 14, jobLinksLimit = 600 } =
-    user ?? {};
-
-  const gotoNextPage = async () => {
-    const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
-    nav?.scrollIntoView();
-
-    const paginationNext = retrieveElem(INDEED_QUERY_SELECTOR.PAGINATION_ELEM1);
-    const paginationNext2 = retrieveElem(
-      INDEED_QUERY_SELECTOR.PAGINATION_ELEM2
-    );
-
-    if (paginationNext !== null) {
-      await click(paginationNext);
-    } else if (paginationNext2 !== null) {
-      await click(paginationNext2);
-    }
-  };
-
-  const getPageJobLinks = async (user) => {
-    try {
-      // TODO: this url should be updated later to be dynamic based on user preferences.
-      let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${jobPostingPreferredAge}`;
-      await chrome.tabs.create({ url });
-      console.log(
-        'LINKS LENGTH: before script run ',
-        Object.keys(jobLinks)?.length
-      );
-
-      const newJobLinks = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
-
-      newJobLinks?.forEach((link) => {
-        const href = link.getAttribute(HREF);
-        if (href) {
-          jobLinks[href] = href;
-        }
-      });
-
-      console.log(
-        'LINKS LENGTH: after script run ',
-        Object.keys(jobLinks)?.length
-      );
-      await gotoNextPage();
-    } catch (e) {
-      // TODO:
-      // This needs to be replaced with an error logging system.
-      // preferably stored in json/local db.
-      console.log('Error Running script');
-      console.log(e);
-      throw new Error('Script failed');
-    }
-  };
-
-  while (!jobLinks || jobLinks.length < jobLinksLimit) {
-    await getPageJobLinks();
-  }
-
-  console.log('FINISHED COLLECTING JOBS!!!!!!');
-  console.log('Job Links Collected: ' + jobLinks?.length);
-  return jobLinks;
-};
-
-/**
- * Collect all available job application links.
- */
-export const handleJobLinksRetrieval = () => {
-  chrome.action.onClicked.addListener(async (tab) => {
-    // Asynchronously retrieve data from storage.sync, then cache it.
-    let appInfo = {};
-
-    try {
-      appInfo = {
-        ...(await getAllStorageSyncData('indeed').then((items) => items)),
-      };
-      console.log(JSON.stringify(appInfo));
-      if (!appInfo?.indeed?.user) {
-        await chrome.tabs.create({ url: 'onboarding.html' });
-        throw new Error('Please create a user');
-      }
-    } catch (e) {
-      // Handle error that occurred during storage initialization.
-      console.log('could not retrieve application information');
-      console.log(e);
-    }
-
-    console.log('success info retrieval');
-
-    /*const jobLinks = {
-      ...(
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          func: collectLinks,
-          args: [appInfo?.indeed?.user],
-        })
-      )[0].result,
-    };*/
-    const jobLinks = await chrome.tabs.executeAsyncFunction(
-      tab.id,
-      appInfo?.indeed?.user,
-      collectLinks
-    );
-
-    console.log(jobLinks);
-  });
 };

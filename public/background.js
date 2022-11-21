@@ -1,7 +1,156 @@
 /*global chrome*/
 /*imports need to be uploaded in order. and cannot be imported into each other*/
-import { handleJobLinksRetrieval, setStorage } from './indeed/get-links.js';
-try {
+// Example of a simple user data object
+import {
+  retrieveElem,
+  retrieveElems,
+  click,
+  HREF,
+  INDEED_QUERY_SELECTOR,
+  setStorage,
+  getAllStorageSyncData,
+} from './indeed/get-links.js';
+
+chrome.runtime.onConnect.addListener(function(port) {
+  port.onMessage.addListener(function(msg) {
+    console.log(JSON.stringify(msg));
+    if (msg.status === 'entered') {
+      console.log('entered collect links function');
+    } else if (msg.status === 'finished collecting links') {
+      console.log('LINKS RETRIEVED', msg.amount);
+    }
+
+    if (msg.status === 'connecting to messenger') {
+      port.postMessage({ question: 'connected' });
+    }
+  });
+});
+
+const getCurrentTab = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+};
+
+/**
+ * crawls pages and collects job links
+ */
+const collectLinks = async (user, messageId) => {
+  console.log('inside collect links');
+  let { jobLinks = {}, jobPostingPreferredAge = 14, jobLinksLimit = 600 } =
+    user ?? {};
+  const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
+  const newJobLinks = { ...jobLinks };
+
+  const gotoNextPage = async () => {
+    const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
+    nav?.scrollIntoView();
+
+    const paginationNext = retrieveElem(INDEED_QUERY_SELECTOR.PAGINATION_ELEM1);
+    const paginationNext2 = retrieveElem(
+      INDEED_QUERY_SELECTOR.PAGINATION_ELEM2
+    );
+
+    if (paginationNext !== null) {
+      await click(paginationNext);
+    } else if (paginationNext2 !== null) {
+      await click(paginationNext2);
+    }
+  };
+
+  const getPageJobLinks = async (user) => {
+    try {
+      // TODO: this url should be updated later to be dynamic based on user preferences.
+      let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${jobPostingPreferredAge}`;
+      await chrome.tabs.create({ url });
+      //port.postMessage({ status: 'started scanning page' });
+      console.log('started scanning page');
+      const links = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
+      links?.forEach((link) => {
+        const href = link.getAttribute(HREF);
+        if (href) {
+          newJobLinks[href] = href;
+        }
+      });
+
+      console.log('finished scanning page');
+      await gotoNextPage();
+    } catch (e) {
+      console.log('script failed', e);
+      throw new Error('script failed');
+    }
+  };
+
+  try {
+    console.log('about to while loop');
+    while (!newJobLinks || Object.keys(newJobLinks)?.length < jobLinksLimit) {
+      console.log('link collection in progress');
+      await getPageJobLinks();
+    }
+
+    console.log('finished collecting links');
+    result.newJobLinks = newJobLinks;
+  } catch (x) {
+    // Make an explicit copy of the Error properties
+    result.error = {
+      message: x.message,
+      arguments: x.arguments,
+      type: x.type,
+      name: x.name,
+      stack: x.stack,
+    };
+  }
+
+  return result;
+};
+
+/**
+ * Collect all available job application links.
+ */
+const handleJobLinksRetrieval = async (messageId) => {
+  console.log('inside handle job links retrieval');
+  // Asynchronously retrieve data from storage.sync, then cache it.
+  let appInfo = {};
+
+  try {
+    appInfo = {
+      ...(await getAllStorageSyncData('indeed').then((items) => items)),
+    };
+
+    console.log('Retrieved app info', JSON.stringify(appInfo));
+
+    if (!appInfo?.indeed?.user) {
+      await chrome.tabs.create({ url: 'onboarding.html' });
+      throw new Error('Please create a user');
+    }
+  } catch (e) {
+    // Handle error that occurred during storage initialization.
+    console.log('could not retrieve application information');
+    console.log(e);
+  }
+
+  console.log('success info retrieval');
+  console.log('about to execute script');
+  let tab = await getCurrentTab();
+  const user = appInfo?.indeed?.user;
+  console.log('USER', appInfo?.indeed?.user);
+  const result = await collectLinks(user, messageId);
+  /*const result = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: collectLinks,
+    args: [user, messageId],
+  });*/
+
+  console.log('executed scrupt rsult =', result);
+};
+
+const mainFunc = async () => {
+  // Generate a random 4-char key to avoid clashes if called multiple times
+  const messageId = Math.floor((1 + Math.random()) * 0x10000)
+    .toString(16)
+    .substring(1);
+
   let mockAppInfo = {
     applicationName: 'indeed',
     user: {
@@ -13,23 +162,25 @@ try {
       jobPostingPreferredAge: 7,
     },
   };
+  let tab = await getCurrentTab();
+
   console.log('mock info constructed');
-  setStorage('indeed', mockAppInfo);
-
+  await setStorage('indeed', mockAppInfo);
   console.log('storage is set');
-  handleJobLinksRetrieval();
-} catch (e) {
-  console.log(e?.message);
-  console.log(e);
-}
+  await handleJobLinksRetrieval(messageId);
 
-// chrome.tabs.onUpdated.addListener((_tabId, changeInfo, _tab) => {
-//   console.log('change url:', changeInfo.url);
-//   chrome.scripting.executeScript({
-//     target: { tabId: _tab.id },
-//     func: test,
-//   });
-// });
+  console.log('waiting for message');
+};
+
+//this is our extension icon click response
+chrome.action.onClicked.addListener(async () => {
+  try {
+    await mainFunc();
+  } catch (e) {
+    console.log(e?.message);
+    console.log(e);
+  }
+});
 
 // chrome.action.onClicked.addListener((tab) => {
 //   chrome.scripting.executeScript({
