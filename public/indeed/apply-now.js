@@ -1,5 +1,151 @@
-import { REGEX, APPLY } from './constants';
-import { getStoredLinks, setAppInfo, getApplyButton, getNewHref } from './util';
+//APPLY NOW CONSTANTS | apply-now.js
+export const REGEX = {
+  CONTAINS_APPS: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
+  CONTAINS_FORM: /\bhttps:\/\/m5.apply.indeed.com\/\b/gi,
+  CONTAINS_JOBS: /\bhttps:\/\/www.indeed.com\/jobs\b/gi,
+  JOB_WINDOW: 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14',
+};
+
+// application button text variations
+export const APPLY = {
+  NOW: 'Apply now',
+  APPLIED: 'Applied',
+  COMPANY_SITE: 'Apply on company site',
+};
+
+/**
+ * Remove a link from our stored and local links map
+ * @param {key:href, val:href} links
+ */
+export const deleteHref = (links, hrefToBeDeleted) => {
+  const appInfo = getAppInfo(hrefToBeDeleted);
+  delete links[appInfo.href];
+
+  //window.localStorage.setItem(LINKS, JSON.stringify(links));
+  console.log('FINISHED RUNNING APP SCRIPT', Object.keys(links).length);
+  return links;
+};
+
+/**
+ * Return the apply to job button which may have three values:  EX.(Apply now, Applied, or Apply on company site)
+ * @param appWindow the current href value from our links object.
+ * @throws Exception if this button is not an Apply Now Button.
+ * @returns
+ */
+export const getApplyButton = (currentUrl, links) => {
+  //we may need to extract this document value from the applyWindow parameter.
+  const tryId = document
+    ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
+    ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON_WRAPPER)
+    ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON_ID);
+
+  const tryButton = document
+    ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
+    ?.querySelector(
+      `${INDEED_QUERY_SELECTOR.APPLY_WIDGET} ${HTML_ELEMENT.BUTTON}`
+    );
+
+  return (
+    handleApplyNowNotFound(tryId, currentUrl, links) ??
+    handleApplyNowNotFound(tryButton, currentUrl, links)
+  );
+};
+
+/**
+ * Retrieve the next job url from our stored links
+ * @param {Records<string, string>} links a map of the links from localStorage
+ * @param {string} oldHref the recently utilized link
+ */
+export const getNewHref = (oldHref, links) => {
+  delete links[oldHref];
+
+  const newHref = Object.keys(links).pop();
+
+  if (newHref === undefined) {
+    throw new Error('The url is undefined.');
+  }
+
+  return newHref;
+};
+
+// Asynchronously retrieve data from storage.sync, then cache it.
+export const initStorageCache = getAllStorageSyncData().then((items) => {
+  // Where we will expose all the data we retrieve from storage.sync.
+  // Copy the data retrieved from storage into storageCache.
+  return { ...items };
+});
+
+/**
+ * Sets current application information to local storage to use during form
+ */
+export const setStorage = async (key, val) => {
+  if (!val || !key) {
+    return;
+  }
+
+  chrome.storage.sync.set({ [key]: val }, () => {
+    console.log('Value is set to ' + JSON.stringify(val));
+  });
+
+  console.log('Successfully stored information');
+};
+
+/**
+ * Returns some stored information for a user
+ *
+ * @param {string} key the key for our stored object
+ * @returns
+ */
+export const getAllStorageSyncData = (key) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get([key], (items) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+
+      resolve(items);
+    });
+  });
+};
+
+/**
+ * Retrieves information about our current job application from webpage
+ *
+ * @param {string} appWindow : an href string of the current job application.
+ * @returns {object} currentAppInfo : an object containing all information about the job application
+ */
+export const getAppInfo = (appWindow) => {
+  const applyWidget = document
+    ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
+    ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_WIDGET);
+
+  const currentAppInfo = {}; //All information of our application should be stored here.
+
+  for (const [camelCaseValues, lowerCaseValues] of Object.entries(APP_INFO)) {
+    let appVal = applyWidget?.getAttribute(`${PREFIX}${lowerCaseValues}`); //try all lowercase vals
+
+    if (!appVal) {
+      appVal = applyWidget?.getAttribute(`${PREFIX}${camelCaseValues}`); //try camelcase vals
+    }
+
+    if (appVal) {
+      currentAppInfo[lowerCaseValues] = appVal;
+    }
+  }
+
+  currentAppInfo[HREF] = appWindow;
+  return currentAppInfo;
+};
+
+export const handleApplyNowNotFound = (elem, currentUrl, links) => {
+  if (!elem || elem.textContent !== APPLY.NOW) {
+    delete links[currentUrl];
+
+    return links;
+  }
+
+  return elem;
+};
 
 const handleApplication = async () => {
   let links = {};

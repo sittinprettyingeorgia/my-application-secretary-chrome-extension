@@ -1,18 +1,8 @@
 /*global chrome*/
-import { setStorage } from './indeed/get-links.js';
+import { setStorage, handleBackgroundMessaging } from './util.js';
 
-chrome.runtime.onConnect.addListener(function(port) {
-  port.onMessage.addListener(function(msg) {
-    console.log(JSON.stringify(msg));
-    switch (msg.status) {
-      case 'connecting to messenger':
-        port.postMessage({ response: 'connected' });
-        break;
-      case 'finished collecting links'
-        // helper function that stores our links 
-        break;
-    }
-  });
+chrome.runtime.onConnect.addListener((port) => {
+  port.onMessage.addListener((msg) => handleBackgroundMessaging(msg));
 });
 
 const mainFunc = async () => {
