@@ -1,10 +1,70 @@
-import func from './test.js';
 /*global chrome*/
-chrome.runtime.onInstalled.addListener(() => {
-  console.log('Chrome extension successfully installed!');
-  console.log(func);
-  return;
+import { setStorage, handleMockInfo, getCurrentTab } from './util.js';
+
+const updateJobLinkData = async (msg) => {
+  console.log(msg.status);
+  let data = msg.data;
+  let newData = { ...(await getAllStorageSyncData('indeed')) };
+  newData.user.jobLinks = {
+    ...newData.user.jobLinks,
+    ...data,
+  };
+
+  setStorage('indeed', newData);
+};
+
+const establishConnection = (msg, port, messageId) => {
+  console.log(msg.status);
+  port.postMessage({ response: 'connected', messageId });
+};
+
+//this is where we communicate with our content scripts.
+chrome.runtime.onConnect.addListener((port) => {
+  // Asynchronously retrieve data from storage.sync, then cache it.
+  // Generate a random 4-char key to avoid clashes if called multiple times
+  let messageId = Math.floor((1 + Math.random()) * 0x10000)
+    .toString(16)
+    .substring(1);
+
+  port.onMessage.addListener((msg) => {
+    switch (msg.status) {
+      case 'connecting to messenger':
+        establishConnection(msg, port, messageId);
+        break;
+      case 'completed job link page scan':
+        updateJobLinkData(msg);
+        break;
+      default:
+        console.log('message mapping failed');
+    }
+  });
 });
+
+//this is our extension icon click response
+chrome.action.onClicked.addListener(async () => {
+  try {
+    await setStorage('indeed', handleMockInfo());
+    console.log('storage set and about to execute script');
+
+    let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
+    let newTab = await chrome.tabs.create({ url });
+
+    chrome.scripting.executeScript({
+      target: { tabId: newTab.id },
+      files: ['./indeed/get-links.js'],
+    });
+  } catch (e) {
+    console.log(e?.message);
+    console.log(e);
+  }
+});
+
+// chrome.action.onClicked.addListener((tab) => {
+//   chrome.scripting.executeScript({
+//     target: { tabId: tab.id },
+//     files: ['get-links-old.js'],
+//   });
+// });
 
 /**
  * <!DOCTYPE html>
@@ -225,22 +285,18 @@ chrome.tabs.onRemoved.addListener((tabCurrent, removed) => {
     chrome?.power?.releaseKeepAwake();
     saveSession("linkedin");
     saveSessionDebug(debugObj, "linkedin");
-    resetVariables();
-    globalReset();
   } else if (ziprecruiterTabId && tabCurrent == ziprecruiterTabId) {
     console.log("Resetting ziprecruiter");
     chrome?.power?.releaseKeepAwake();
     saveSession("ziprecruiter");
-    resetVariables();
-    globalReset();
   } else if (indeedTabId && tabCurrent == indeedTabId) {
     console.log("Resetting indeed");
     chrome?.power?.releaseKeepAwake();
     saveSession("indeed");
     saveSessionDebug(debugObj, "indeed");
+  }
     resetVariables();
     globalReset();
-  }
 });
 
 function updateUrl(link, message2) {
