@@ -233,16 +233,23 @@
  *
  *
  *********************************/
+const handleConnectedAction = async (port, messageId) => {
+  port.postMessage({
+    status: 'connection received, starting job scan',
+  });
+  //messaging works but handleJobLinksRetrieval is faileing
+  await handleJobLinksRetrieval(port, msg.messageId);
+};
 
 let port = chrome.runtime.connect({ name: 'get-links' });
 port.postMessage({ status: 'connecting to messenger' });
 port.onMessage.addListener(async (msg) => {
   switch (msg.response) {
     case 'connected':
-      //we can now pass data
-      //await handleJobLinksRetrieval(port, msg.messageId);
+      handleConnectedAction(port, msg.messageId);
       break;
     default:
-      port.postMessage({ status: 'connecction failed' });
+      console.log('connection failed');
+      port.postMessage({ status: 'connection failed' });
   }
 });

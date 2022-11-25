@@ -34,6 +34,9 @@ chrome.runtime.onConnect.addListener((port) => {
       case 'completed job link page scan':
         updateJobLinkData(msg);
         break;
+      case 'connection received, starting job scan':
+        console.log(msg.status);
+        break;
       default:
         console.log('message mapping failed');
     }
