@@ -1,10 +1,3 @@
-// Asynchronously retrieve data from storage.sync, then cache it.
-export const initStorageCache = getAllStorageSyncData().then((items) => {
-  // Where we will expose all the data we retrieve from storage.sync.
-  // Copy the data retrieved from storage into storageCache.
-  return { ...items };
-});
-
 /**
  * Returns some stored information for a user
  *
@@ -22,19 +15,26 @@ export const getAllStorageSyncData = (key) => {
     });
   });
 };
+export const handleMockInfo = () => {
+  return {
+    applicationName: 'indeed',
+    user: {
+      userId: '1',
+      jobLinksLimit: 600,
+      firstName: 'Mitchell',
+      lastName: 'Blake',
+      jobLinks: {},
+      jobPostingPreferredAge: 7,
+    },
+  };
+};
 
-//TODO add handler for messaging to different content scripts
-export const handleBackgroundMessaging = (msg) => {
-    switch (msg.status) {
-        case 'connecting to messenger':
-          port.postMessage({ response: 'connected' });
-          break;
-        case 'finished collecting links'
-          // helper function that stores our links
-          break;
-      }
-}
-
+export const getCurrentTab = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+};
 /**
  * Sets current application information to local storage to use during form
  */

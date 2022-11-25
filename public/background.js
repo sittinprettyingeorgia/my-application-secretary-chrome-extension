@@ -1,37 +1,58 @@
 /*global chrome*/
-import { setStorage, handleBackgroundMessaging } from './util.js';
+import { setStorage, handleMockInfo, getCurrentTab } from './util.js';
 
+const updateJobLinkData = async (msg) => {
+  console.log(msg.status);
+  let data = msg.data;
+  let newData = { ...(await getAllStorageSyncData('indeed')) };
+  newData.user.jobLinks = {
+    ...newData.user.jobLinks,
+    ...data,
+  };
+
+  setStorage('indeed', newData);
+};
+
+const establishConnection = (msg, port, messageId) => {
+  console.log(msg.status);
+  port.postMessage({ response: 'connected', messageId });
+};
+
+//this is where we communicate with our content scripts.
 chrome.runtime.onConnect.addListener((port) => {
-  port.onMessage.addListener((msg) => handleBackgroundMessaging(msg));
-});
-
-const mainFunc = async () => {
+  // Asynchronously retrieve data from storage.sync, then cache it.
   // Generate a random 4-char key to avoid clashes if called multiple times
-  const messageId = Math.floor((1 + Math.random()) * 0x10000)
+  let messageId = Math.floor((1 + Math.random()) * 0x10000)
     .toString(16)
     .substring(1);
 
-  let mockAppInfo = {
-    applicationName: 'indeed',
-    user: {
-      userId: '1',
-      jobLinksLimit: 600,
-      firstName: 'Mitchell',
-      lastName: 'Blake',
-      jobLinks: {},
-      jobPostingPreferredAge: 7,
-    },
-  };
-
-  console.log('mock info constructed');
-  await setStorage('indeed', mockAppInfo);
-  console.log('mock info stored');
-};
+  port.onMessage.addListener((msg) => {
+    switch (msg.status) {
+      case 'connecting to messenger':
+        establishConnection(msg, port, messageId);
+        break;
+      case 'completed job link page scan':
+        updateJobLinkData(msg);
+        break;
+      default:
+        console.log('message mapping failed');
+    }
+  });
+});
 
 //this is our extension icon click response
 chrome.action.onClicked.addListener(async () => {
   try {
-    await mainFunc();
+    await setStorage('indeed', handleMockInfo());
+    console.log('storage set and about to execute script');
+
+    let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
+    let newTab = await chrome.tabs.create({ url });
+
+    chrome.scripting.executeScript({
+      target: { tabId: newTab.id },
+      files: ['./indeed/get-links.js'],
+    });
   } catch (e) {
     console.log(e?.message);
     console.log(e);
