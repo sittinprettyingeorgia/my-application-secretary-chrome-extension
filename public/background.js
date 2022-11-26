@@ -28,10 +28,10 @@ chrome.runtime.onConnect.addListener((port) => {
       case 'connection received, starting job scan':
         console.log(msg.status);
         break;
-      case 'no background response received':
+      case 'waiting for message':
         console.log('script did not receive background message');
       default:
-        console.log('message mapping failed', msg);
+        console.log('waiting for message', msg);
     }
   });
 });

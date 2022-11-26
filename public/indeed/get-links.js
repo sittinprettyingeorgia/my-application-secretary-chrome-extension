@@ -1,8 +1,6 @@
 const DEFAULTS = {
   limit: 600,
 };
-const HREF = 'href';
-const INDEED = 'indeed';
 
 // Event types
 const MOUSE = {
@@ -90,7 +88,6 @@ const collectLinks = async (user, port, messageId) => {
   const newJobLinks = { ...jobLinks };
 
   const gotoNextPage = () => {
-    console.log('starting gotonext');
     const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
     nav?.scrollIntoView();
 
@@ -98,7 +95,7 @@ const collectLinks = async (user, port, messageId) => {
     const paginationNext2 = retrieveElem(
       INDEED_QUERY_SELECTOR.PAGINATION_ELEM2
     );
-    console.log('before pagination condition');
+
     if (paginationNext !== null) {
       click(paginationNext);
     } else if (paginationNext2 !== null) {
@@ -179,9 +176,8 @@ const setStorageLocalData = async (key, val) => {
   chrome.storage.local.set({ [key]: val }, () => {
     console.log('Value is set to ' + JSON.stringify(val));
   });
-
-  console.log('Successfully stored information');
 };
+
 /**
  * Collect all available job application links.
  */
@@ -206,8 +202,7 @@ const handleJobLinksRetrieval = async (port, messageId) => {
   }
 
   const user = appInfo?.indeed?.user;
-  const data = await collectLinks(user, port, messageId); // Collect links may need to be executed within its own script
-  console.log('executed script result =', data);
+  const data = await collectLinks(user, port, messageId);
   port.postMessage({ status: 'completed job scan' });
   setStorageLocalData('indeed', { ...data });
 };
@@ -236,8 +231,9 @@ port.onMessage.addListener(async (msg) => {
     case 'connected':
       await handleConnectedAction(port, msg);
       break;
+    case 'waiting for message':
+      console.log('background did not receive background message');
     default:
-      console.log('no background response received');
-      port.postMessage({ status: 'no background response received' });
+      port.postMessage({ status: 'waiting for message...' });
   }
 });
