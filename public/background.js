@@ -1,5 +1,5 @@
 /*global chrome*/
-import { setStorage, handleMockInfo, getCurrentTab } from './util.js';
+import { setStorage, handleMockInfo, getAllStorageSyncData } from './util.js';
 
 const updateJobLinkData = async (msg) => {
   console.log(msg.status);

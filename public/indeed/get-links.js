@@ -121,9 +121,10 @@ const collectLinks = async (user, port, messageId) => {
     try {
       // TODO: this url should be updated later to be dynamic based on user preferences.
       let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${jobPostingPreferredAge}`;
-      await chrome.tabs.create({ url });
-      //port.postMessage({ status: 'started scanning page' });
-      console.log('started scanning page');
+      window.location.replace(url);
+
+      port.postMessage({ status: 'starting page scan' });
+      console.log('starting scanning page');
       const links = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
       links?.forEach((link) => {
         const href = link.getAttribute(HREF);
@@ -132,7 +133,7 @@ const collectLinks = async (user, port, messageId) => {
         }
       });
 
-      console.log('finished scanning page');
+      console.log('finished page scan');
       port.postMessage({
         status: 'completed job link page scan',
         data: links,
@@ -183,7 +184,7 @@ const handleJobLinksRetrieval = async (port, messageId) => {
     console.log('Retrieved app info', JSON.stringify(appInfo));
 
     if (!appInfo?.indeed?.user) {
-      await chrome.tabs.create({ url: 'onboarding.html' });
+      window.location.replace('onboarding.html');
       throw new Error('Please create a user');
     }
   } catch (e) {
