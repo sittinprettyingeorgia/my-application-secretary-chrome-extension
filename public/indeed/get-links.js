@@ -3,7 +3,6 @@ const DEFAULTS = {
 };
 const HREF = 'href';
 const INDEED = 'indeed';
-const BASE = 'https://www.indeed.com';
 
 // Event types
 const MOUSE = {
@@ -57,7 +56,7 @@ const retrieveElem = (selector) => {
   return document.querySelector(selector);
 };
 
-const click = async (elem) => {
+const click = (elem) => {
   elem.click();
 };
 
@@ -80,18 +79,6 @@ const getCurrentTab = async () => {
   return tab;
 };
 
-const getAllStorageSyncData = (key) => {
-  return new Promise((resolve, reject) => {
-    chrome.storage.sync.get([key], (items) => {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-
-      resolve(items);
-    });
-  });
-};
-
 /**
  * crawls pages and collects job links
  */
@@ -102,7 +89,8 @@ const collectLinks = async (user, port, messageId) => {
   const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
   const newJobLinks = { ...jobLinks };
 
-  const gotoNextPage = async () => {
+  const gotoNextPage = () => {
+    console.log('starting gotonext');
     const nav = document.querySelector(INDEED_QUERY_SELECTOR.NAV_CONTAINER);
     nav?.scrollIntoView();
 
@@ -110,11 +98,11 @@ const collectLinks = async (user, port, messageId) => {
     const paginationNext2 = retrieveElem(
       INDEED_QUERY_SELECTOR.PAGINATION_ELEM2
     );
-
+    console.log('before pagination condition');
     if (paginationNext !== null) {
-      await click(paginationNext);
+      click(paginationNext);
     } else if (paginationNext2 !== null) {
-      await click(paginationNext2);
+      click(paginationNext2);
     }
   };
 
@@ -128,11 +116,9 @@ const collectLinks = async (user, port, messageId) => {
         window.location.replace(url);
       }
 
-      console.log('starting scanning page');
       const links = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
       for (const link of links) {
-        const href = BASE + link.getAttribute(HREF);
-        console.log('href retreieved', href);
+        const href = link.getAttribute(HREF);
 
         if (href) {
           newJobLinks[href] = href;
@@ -144,11 +130,7 @@ const collectLinks = async (user, port, messageId) => {
       }
 
       console.log('finished page scan');
-      port.postMessage({
-        status: 'completed job link page scan',
-        data: newJobLinks,
-      });
-      await gotoNextPage();
+      gotoNextPage();
     } catch (e) {
       console.log('script failed', e);
       throw new Error('script failed');
@@ -156,15 +138,14 @@ const collectLinks = async (user, port, messageId) => {
   };
 
   try {
-    console.log('about to while loop');
     let limit = 30;
+
     while (!newJobLinks || Object.keys(newJobLinks)?.length < limit) {
-      console.log('link collection in progress');
       await getPageJobLinks();
     }
 
     console.log('finished collecting links');
-    result.newJobLinks = newJobLinks;
+    result.jobLinks = newJobLinks;
   } catch (x) {
     // Make an explicit copy of the Error properties
     result.error = {
@@ -179,22 +160,42 @@ const collectLinks = async (user, port, messageId) => {
   return result;
 };
 
+const getAllStorageLocalData = (key) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get([key], (items) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+
+      resolve(items);
+    });
+  });
+};
+const setStorageLocalData = async (key, val) => {
+  if (!val || !key) {
+    return;
+  }
+
+  chrome.storage.local.set({ [key]: val }, () => {
+    console.log('Value is set to ' + JSON.stringify(val));
+  });
+
+  console.log('Successfully stored information');
+};
 /**
  * Collect all available job application links.
  */
 const handleJobLinksRetrieval = async (port, messageId) => {
-  console.log('inside handle job links retrieval');
   // Asynchronously retrieve data from storage.sync, then cache it.
   let appInfo = {};
 
   try {
     appInfo = {
-      ...(await getAllStorageSyncData('indeed').then((items) => items)),
+      ...(await getAllStorageLocalData('indeed').then((items) => items)),
     };
 
-    console.log('Retrieved app info', JSON.stringify(appInfo));
-
     if (!appInfo?.indeed?.user) {
+      //TODO: we still need to create onboarding
       window.location.replace('onboarding.html');
       throw new Error('Please create a user');
     }
@@ -204,12 +205,11 @@ const handleJobLinksRetrieval = async (port, messageId) => {
     console.log(e);
   }
 
-  console.log('success info retrieval');
-  console.log('about to execute script');
   const user = appInfo?.indeed?.user;
-  console.log('USER', appInfo?.indeed?.user);
-  const result = await collectLinks(user, port, messageId); // Collect links may need to be executed within its own script
-  console.log('executed script result =', result);
+  const data = await collectLinks(user, port, messageId); // Collect links may need to be executed within its own script
+  console.log('executed script result =', data);
+  port.postMessage({ status: 'completed job scan' });
+  setStorageLocalData('indeed', { ...data });
 };
 
 /*********************************

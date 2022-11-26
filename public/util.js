@@ -27,20 +27,6 @@ export const getAllStorageLocalData = (key) => {
   });
 };
 
-export const handleMockInfo = () => {
-  return {
-    applicationName: 'indeed',
-    user: {
-      userId: '1',
-      jobLinksLimit: 600,
-      firstName: 'Mitchell',
-      lastName: 'Blake',
-      jobLinks: {},
-      jobPostingPreferredAge: 7,
-    },
-  };
-};
-
 export const getCurrentTab = async () => {
   let queryOptions = { active: true, lastFocusedWindow: true };
   // `tab` will either be a `tabs.Tab` instance or `undefined`.
@@ -67,7 +53,7 @@ export const setStorageLocalData = async (key, val) => {
   }
 
   chrome.storage.local.set({ [key]: val }, () => {
-    //console.log('Value is set to ' + JSON.stringify(val));
+    console.log('Value is set to ' + JSON.stringify(val));
   });
 
   console.log('Successfully stored information');

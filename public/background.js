@@ -1,23 +1,8 @@
 /*global chrome*/
-import {
-  handleMockInfo,
-  getAllStorageLocalData,
-  setStorageLocalData,
-} from './util.js';
-
-const updateJobLinkData = async (msg) => {
-  console.log(msg.status);
-  let data = msg.data;
-  //console.log('newdata', JSON.stringify(data));
-  let newData = await getAllStorageLocalData('indeed');
-  //console.log('oldData', JSON.stringify(newData));
-  newData.indeed.user.jobLinks = {
-    ...newData?.indeed?.user?.jobLinks,
-    ...data,
-  };
-
-  setStorageLocalData('indeed', { ...newData });
-};
+import { getAllStorageLocalData, setStorageLocalData } from './util.js';
+//base will need to be added to any links collected before being visited because
+//all of our links are not full http links, they are paths ie. /my/path/1234365?as
+const BASE = 'https://www.indeed.com';
 
 const establishConnection = (msg, port, messageId) => {
   console.log(msg.status);
@@ -37,8 +22,8 @@ chrome.runtime.onConnect.addListener((port) => {
       case 'connecting job-links messenger':
         establishConnection(msg, port, messageId);
         break;
-      case 'completed job link page scan':
-        await updateJobLinkData(msg);
+      case 'completed job scan':
+        //content-script has already stored data we can move on
         break;
       case 'connection received, starting job scan':
         console.log(msg.status);
@@ -54,7 +39,18 @@ chrome.runtime.onConnect.addListener((port) => {
 //this is our extension icon click response
 chrome.action.onClicked.addListener(async () => {
   try {
-    await setStorageLocalData('indeed', handleMockInfo());
+    let mockInfo = {
+      applicationName: 'indeed',
+      user: {
+        userId: '1',
+        jobLinksLimit: 600,
+        firstName: 'Mitchell',
+        lastName: 'Blake',
+        jobLinks: { 'https://testlink.com': 'https://testlink.com' },
+        jobPostingPreferredAge: 7,
+      },
+    };
+    await setStorageLocalData('indeed', mockInfo);
     console.log('storage set and about to execute script');
 
     let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
