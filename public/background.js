@@ -26,13 +26,13 @@ chrome.runtime.onConnect.addListener((port) => {
     .toString(16)
     .substring(1);
 
-  port.onMessage.addListener((msg) => {
+  port.onMessage.addListener(async (msg) => {
     switch (msg.status) {
       case 'connecting to messenger':
         establishConnection(msg, port, messageId);
         break;
       case 'completed job link page scan':
-        updateJobLinkData(msg);
+        await updateJobLinkData(msg);
         break;
       case 'connection received, starting job scan':
         console.log(msg.status);
