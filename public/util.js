@@ -15,6 +15,18 @@ export const getAllStorageSyncData = (key) => {
     });
   });
 };
+export const getAllStorageLocalData = (key) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get([key], (items) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+
+      resolve(items);
+    });
+  });
+};
+
 export const handleMockInfo = () => {
   return {
     applicationName: 'indeed',
@@ -38,13 +50,24 @@ export const getCurrentTab = async () => {
 /**
  * Sets current application information to local storage to use during form
  */
-export const setStorage = async (key, val) => {
+export const setStorageSyncData = async (key, val) => {
   if (!val || !key) {
     return;
   }
 
   chrome.storage.sync.set({ [key]: val }, () => {
-    console.log('Value is set to ' + JSON.stringify(val));
+    //console.log('Value is set to ' + JSON.stringify(val));
+  });
+
+  console.log('Successfully stored information');
+};
+export const setStorageLocalData = async (key, val) => {
+  if (!val || !key) {
+    return;
+  }
+
+  chrome.storage.local.set({ [key]: val }, () => {
+    //console.log('Value is set to ' + JSON.stringify(val));
   });
 
   console.log('Successfully stored information');

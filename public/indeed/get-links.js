@@ -3,6 +3,8 @@ const DEFAULTS = {
 };
 const HREF = 'href';
 const INDEED = 'indeed';
+const BASE = 'https://www.indeed.com';
+
 // Event types
 const MOUSE = {
   CLICK: 'click',
@@ -94,7 +96,6 @@ const getAllStorageSyncData = (key) => {
  * crawls pages and collects job links
  */
 const collectLinks = async (user, port, messageId) => {
-  console.log('inside collect links');
   let { jobLinks = {}, jobPostingPreferredAge = 14, jobLinksLimit = 600 } =
     user ?? {};
 
@@ -119,24 +120,33 @@ const collectLinks = async (user, port, messageId) => {
 
   const getPageJobLinks = async (user) => {
     try {
-      // TODO: this url should be updated later to be dynamic based on user preferences.
-      let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${jobPostingPreferredAge}`;
-      window.location.replace(url);
+      let myWindow = window.location.href;
 
-      port.postMessage({ status: 'starting page scan' });
+      if (myWindow.search(REGEX.CONTAINS_JOBS) < 0) {
+        // TODO: this url should be updated later to be dynamic based on user preferences.
+        let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${jobPostingPreferredAge}`;
+        window.location.replace(url);
+      }
+
       console.log('starting scanning page');
       const links = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
-      links?.forEach((link) => {
-        const href = link.getAttribute(HREF);
+      for (const link of links) {
+        const href = BASE + link.getAttribute(HREF);
+        console.log('href retreieved', href);
+
         if (href) {
           newJobLinks[href] = href;
         }
-      });
+
+        if (newJobLinks.length > 30) {
+          break;
+        }
+      }
 
       console.log('finished page scan');
       port.postMessage({
         status: 'completed job link page scan',
-        data: links,
+        data: newJobLinks,
       });
       await gotoNextPage();
     } catch (e) {
@@ -147,7 +157,8 @@ const collectLinks = async (user, port, messageId) => {
 
   try {
     console.log('about to while loop');
-    while (!newJobLinks || Object.keys(newJobLinks)?.length < jobLinksLimit) {
+    let limit = 30;
+    while (!newJobLinks || Object.keys(newJobLinks)?.length < limit) {
       console.log('link collection in progress');
       await getPageJobLinks();
     }
@@ -219,14 +230,14 @@ const handleConnectedAction = async (port, msg) => {
 };
 
 let port = chrome.runtime.connect({ name: 'get-links' });
-port.postMessage({ status: 'connecting to messenger' });
+port.postMessage({ status: 'connecting job-links messenger' });
 port.onMessage.addListener(async (msg) => {
   switch (msg.response) {
     case 'connected':
       await handleConnectedAction(port, msg);
       break;
     default:
-      console.log('connection failed');
-      port.postMessage({ status: 'connection failed' });
+      console.log('no background response received');
+      port.postMessage({ status: 'no background response received' });
   }
 });

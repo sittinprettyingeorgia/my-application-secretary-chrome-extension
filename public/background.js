@@ -1,16 +1,22 @@
 /*global chrome*/
-import { setStorage, handleMockInfo, getAllStorageSyncData } from './util.js';
+import {
+  handleMockInfo,
+  getAllStorageLocalData,
+  setStorageLocalData,
+} from './util.js';
 
 const updateJobLinkData = async (msg) => {
   console.log(msg.status);
   let data = msg.data;
-  let newData = { ...(await getAllStorageSyncData('indeed')) };
-  newData.user.jobLinks = {
-    ...newData.user.jobLinks,
+  //console.log('newdata', JSON.stringify(data));
+  let newData = await getAllStorageLocalData('indeed');
+  //console.log('oldData', JSON.stringify(newData));
+  newData.indeed.user.jobLinks = {
+    ...newData?.indeed?.user?.jobLinks,
     ...data,
   };
 
-  setStorage('indeed', newData);
+  setStorageLocalData('indeed', { ...newData });
 };
 
 const establishConnection = (msg, port, messageId) => {
@@ -28,7 +34,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
   port.onMessage.addListener(async (msg) => {
     switch (msg.status) {
-      case 'connecting to messenger':
+      case 'connecting job-links messenger':
         establishConnection(msg, port, messageId);
         break;
       case 'completed job link page scan':
@@ -37,8 +43,10 @@ chrome.runtime.onConnect.addListener((port) => {
       case 'connection received, starting job scan':
         console.log(msg.status);
         break;
+      case 'no background response received':
+        console.log('script did not receive background message');
       default:
-        console.log('message mapping failed');
+        console.log('message mapping failed', msg);
     }
   });
 });
@@ -46,7 +54,7 @@ chrome.runtime.onConnect.addListener((port) => {
 //this is our extension icon click response
 chrome.action.onClicked.addListener(async () => {
   try {
-    await setStorage('indeed', handleMockInfo());
+    await setStorageLocalData('indeed', handleMockInfo());
     console.log('storage set and about to execute script');
 
     let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
