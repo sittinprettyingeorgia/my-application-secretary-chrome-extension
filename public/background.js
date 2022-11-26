@@ -4,7 +4,7 @@ import { getAllStorageLocalData, setStorageLocalData } from './util.js';
 //all of our links are not full http links, they are paths ie. /my/path/1234365?as
 const BASE = 'https://www.indeed.com';
 
-const establishConnection = (msg, port, messageId) => {
+const establishJobLinkConnection = (msg, port, messageId) => {
   console.log(msg.status);
   port.postMessage({ response: 'connected', messageId });
 };
@@ -20,7 +20,7 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onMessage.addListener(async (msg) => {
     switch (msg.status) {
       case 'connecting job-links messenger':
-        establishConnection(msg, port, messageId);
+        establishJobLinkConnection(msg, port, messageId);
         break;
       case 'completed job scan':
         //content-script has already stored data we can move on
@@ -37,7 +37,7 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 //this is our extension icon click response
-chrome.action.onClicked.addListener(async () => {
+chrome.action.onClicked.addListener(async (tab) => {
   try {
     let mockInfo = {
       applicationName: 'indeed',
@@ -51,13 +51,9 @@ chrome.action.onClicked.addListener(async () => {
       },
     };
     await setStorageLocalData('indeed', mockInfo);
-    console.log('storage set and about to execute script');
-
-    let url = 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14';
-    let newTab = await chrome.tabs.create({ url });
 
     chrome.scripting.executeScript({
-      target: { tabId: newTab.id },
+      target: { tabId: tab.id },
       files: ['./indeed/get-links.js'],
     });
   } catch (e) {
