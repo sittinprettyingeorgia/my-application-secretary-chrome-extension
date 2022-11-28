@@ -5,17 +5,6 @@
       const DEFAULTS = {
         limit: 600,
       };
-      // Event types
-      const MOUSE = {
-        CLICK: 'click',
-        DOWN: 'mousedown',
-        OVER: 'mouseover',
-        UP: 'mouseup',
-      };
-
-      const HTML_ELEMENT = {
-        BUTTON: 'button',
-      };
 
       //APPLY NOW CONSTANTS | apply-now.js
       const REGEX = {
@@ -36,6 +25,21 @@
         PAGINATION_ELEM1: 'a[data-testid=pagination-page-next]',
         PAGINATION_ELEM2: 'a[aria-label=Next]',
       };
+
+      // convert array to map
+      const constructMap = (arr) => {
+        return new Map(
+          arr.map((val) => {
+            return [val, val];
+          })
+        );
+      };
+
+      ///convert map to arry
+      const constructArr = (map) => {
+        return Object.keys(map);
+      };
+
       const getAllStorageLocalData = (key) => {
         return new Promise((resolve, reject) => {
           chrome.storage.local.get([key], (items) => {
@@ -101,13 +105,13 @@
        */
       const collectLinks = async (user, port, messageId) => {
         let {
-          jobLinks = {},
+          jobLinks = [],
           jobPostingPreferredAge = 14,
           jobLinksLimit = 600,
         } = user ?? {};
 
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
-        const newJobLinks = { ...jobLinks };
+        const newJobLinks = constructMap(jobLinks);
 
         const gotoNextPage = (newJobLinks) => {
           const nav = document.querySelector(
@@ -122,7 +126,7 @@
             INDEED_QUERY_SELECTOR.PAGINATION_ELEM2
           );
 
-          user.jobLinks = { ...user.jobLinks, ...newJobLinks };
+          user.jobLinks = constructArr({ ...user.jobLinks, ...newJobLinks });
 
           if (paginationNext !== null) {
             sendScanCompleteMessage(port, user, 'completed page scan', true);
@@ -152,9 +156,10 @@
         };
 
         try {
-          let limit = 60;
-
-          if (!newJobLinks || Object.keys(newJobLinks)?.length < limit) {
+          if (
+            !newJobLinks ||
+            Object.keys(newJobLinks)?.length < jobLinksLimit
+          ) {
             await getPageJobLinks(port);
           } else {
             await sendScanCompleteMessage(

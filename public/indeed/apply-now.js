@@ -1,13 +1,13 @@
 //APPLY NOW CONSTANTS | apply-now.js
-export const REGEX = {
+const REGEX = {
   CONTAINS_APPS: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
   CONTAINS_FORM: /\bhttps:\/\/m5.apply.indeed.com\/\b/gi,
   CONTAINS_JOBS: /\bhttps:\/\/www.indeed.com\/jobs\b/gi,
   JOB_WINDOW: 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14',
 };
-
+const INDEED_BASE = 'https://www.indeed.com';
 // application button text variations
-export const APPLY = {
+const APPLY = {
   NOW: 'Apply now',
   APPLIED: 'Applied',
   COMPANY_SITE: 'Apply on company site',
@@ -17,7 +17,7 @@ export const APPLY = {
  * Remove a link from our stored and local links map
  * @param {key:href, val:href} links
  */
-export const deleteHref = (links, hrefToBeDeleted) => {
+const deleteHref = (links, hrefToBeDeleted) => {
   const appInfo = getAppInfo(hrefToBeDeleted);
   delete links[appInfo.href];
 
@@ -32,7 +32,7 @@ export const deleteHref = (links, hrefToBeDeleted) => {
  * @throws Exception if this button is not an Apply Now Button.
  * @returns
  */
-export const getApplyButton = (currentUrl, links) => {
+const getApplyButton = (currentUrl, links) => {
   //we may need to extract this document value from the applyWindow parameter.
   const tryId = document
     ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
@@ -56,7 +56,7 @@ export const getApplyButton = (currentUrl, links) => {
  * @param {Records<string, string>} links a map of the links from localStorage
  * @param {string} oldHref the recently utilized link
  */
-export const getNewHref = (oldHref, links) => {
+const getNewHref = (oldHref, links) => {
   delete links[oldHref];
 
   const newHref = Object.keys(links).pop();
@@ -68,17 +68,10 @@ export const getNewHref = (oldHref, links) => {
   return newHref;
 };
 
-// Asynchronously retrieve data from storage.sync, then cache it.
-export const initStorageCache = getAllStorageSyncData().then((items) => {
-  // Where we will expose all the data we retrieve from storage.sync.
-  // Copy the data retrieved from storage into storageCache.
-  return { ...items };
-});
-
 /**
  * Sets current application information to local storage to use during form
  */
-export const setStorage = async (key, val) => {
+const setStorage = async (key, val) => {
   if (!val || !key) {
     return;
   }
@@ -86,8 +79,6 @@ export const setStorage = async (key, val) => {
   chrome.storage.sync.set({ [key]: val }, () => {
     console.log('Value is set to ' + JSON.stringify(val));
   });
-
-  console.log('Successfully stored information');
 };
 
 /**
@@ -96,7 +87,7 @@ export const setStorage = async (key, val) => {
  * @param {string} key the key for our stored object
  * @returns
  */
-export const getAllStorageSyncData = (key) => {
+const getAllStorageSyncData = (key) => {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get([key], (items) => {
       if (chrome.runtime.lastError) {
@@ -114,7 +105,7 @@ export const getAllStorageSyncData = (key) => {
  * @param {string} appWindow : an href string of the current job application.
  * @returns {object} currentAppInfo : an object containing all information about the job application
  */
-export const getAppInfo = (appWindow) => {
+const getAppInfo = (appWindow) => {
   const applyWidget = document
     ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
     ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_WIDGET);
@@ -137,7 +128,7 @@ export const getAppInfo = (appWindow) => {
   return currentAppInfo;
 };
 
-export const handleApplyNowNotFound = (elem, currentUrl, links) => {
+const handleApplyNowNotFound = (elem, currentUrl, links) => {
   if (!elem || elem.textContent !== APPLY.NOW) {
     delete links[currentUrl];
 
@@ -195,5 +186,3 @@ const handleApplication = async () => {
 
   handleApp();
 };
-
-export default handleApplication;

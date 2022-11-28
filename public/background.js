@@ -27,19 +27,12 @@ const handleJobLinksTab = async (tabId, changeInfo, tab) => {
   const appInfo = {
     ...(await getAllStorageLocalData('indeed').then((items) => items)),
   };
-  console.log('(handleJobLinksTab) inside');
-  console.log('(handleJobLinksTab)tab:', JSON.stringify(tab));
-  console.log('(handleJobLinksTab) appInfo:', JSON.stringify(appInfo));
-  console.log(
-    '(handleJobLinksTab)collection in progress',
-    appInfo?.indeed?.user?.jobLinkCollectionInProgress
-  );
+
   if (changeInfo.status === 'complete' && tab.url) {
     if (
       tab.url.match('indeed.com/jobs') &&
       appInfo?.indeed?.user?.jobLinkCollectionInProgress
     ) {
-      console.log('(handleJobLinksTab) job-links page condition met');
       await chrome.scripting.executeScript({
         target: { tabId },
         files: ['./indeed/get-links.js'],
@@ -54,18 +47,10 @@ const handleJobLinksWebNav = async () => {
   };
 
   let tab = await getCurrentTab();
-  console.log('(handleJobLinksWebNav)inside ');
-  console.log('(handleJobLinksWebNav)tab:', JSON.stringify(tab));
-  console.log('(handleJobLinksWebNav) appInfo:', JSON.stringify(appInfo));
-  console.log(
-    '(handleJobLinksWebNav)collection in progress',
-    appInfo?.indeed?.user?.jobLinkCollectionInProgress
-  );
   if (
     tab.url.match('indeed.com/jobs') &&
     appInfo?.indeed?.user?.jobLinkCollectionInProgress
   ) {
-    console.log('(handleJobLinksWebNav)job-links page condition met');
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['./indeed/get-links.js'],
@@ -122,7 +107,7 @@ const onClickWorker = async (tab) => {
         jobLinksLimit: 600,
         firstName: 'Mitchell',
         lastName: 'Blake',
-        jobLinks: { 'https://testlink.com': 'https://testlink.com' },
+        jobLinks: ['https://testlink.com'],
         jobPostingPreferredAge: 7,
         jobLinkCollectionInProgress: true,
       },
@@ -149,9 +134,6 @@ chrome.action.onClicked.addListener(onClickWorker);
 //chrome.tabs.onUpdated.addListener(handleJobLinksTab(tabId, changeInfo, tab));
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  console.log('tabId', tabId);
-  console.log('changeInfo', JSON.stringify(changeInfo));
-  console.log('tab', JSON.stringify(tab));
   await handleJobLinksTab(tabId, changeInfo, tab);
 });
 chrome.webNavigation.onTabReplaced.addListener(

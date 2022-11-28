@@ -89,6 +89,21 @@ export const getCurrentTab = async () => {
   let [tab] = await chrome.tabs.query(queryOptions);
   return tab;
 };
+
+// convert array to map
+const constructMap = (arr) => {
+  return new Map(
+    arr.map((val) => {
+      return [val, val];
+    })
+  );
+};
+
+///convert map to arry
+const constructArr = (map) => {
+  return Object.keys(map);
+};
+
 /*let myWindow = window.location.href;
       
             if (myWindow.search(REGEX.CONTAINS_JOBS) < 0) {
@@ -96,3 +111,15 @@ export const getCurrentTab = async () => {
               let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${jobPostingPreferredAge}`;
               window.location.replace(url);
             }*/
+
+// Event types
+const MOUSE = {
+  CLICK: 'click',
+  DOWN: 'mousedown',
+  OVER: 'mouseover',
+  UP: 'mouseup',
+};
+
+const HTML_ELEMENT = {
+  BUTTON: 'button',
+};
