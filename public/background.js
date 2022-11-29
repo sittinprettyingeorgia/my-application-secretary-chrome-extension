@@ -94,6 +94,7 @@ const handleMessaging = (port) => {
     }
   });
 };
+
 /*****************************************
  *
  * SERVICE WORKER
