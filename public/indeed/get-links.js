@@ -26,18 +26,14 @@
         PAGINATION_ELEM2: 'a[aria-label=Next]',
       };
 
-      // convert array to map
       const constructMap = (arr) => {
-        return new Map(
-          arr.map((val) => {
-            return [val, val];
-          })
-        );
-      };
+        let map = {};
 
-      ///convert map to arry
-      const constructArr = (map) => {
-        return Object.keys(map);
+        for (const item of arr) {
+          map[item] = item;
+        }
+
+        return map;
       };
 
       const getAllStorageLocalData = (key) => {
@@ -126,7 +122,7 @@
             INDEED_QUERY_SELECTOR.PAGINATION_ELEM2
           );
 
-          user.jobLinks = constructArr({ ...user.jobLinks, ...newJobLinks });
+          user.jobLinks = [...user.jobLinks, ...newJobLinks];
 
           if (paginationNext !== null) {
             sendScanCompleteMessage(port, user, 'completed page scan', true);
@@ -148,7 +144,7 @@
               }
             }
 
-            gotoNextPage(newJobLinks);
+            gotoNextPage(Object.keys(newJobLinks));
           } catch (e) {
             console.log('script failed', e);
             throw new Error('script failed');

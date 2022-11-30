@@ -89,6 +89,8 @@ const handleMessaging = (port) => {
         console.log('script did not receive background message');
       case 'debug':
         console.log(msg.debug);
+      case 'debugm':
+        console.log(msg.debug);
       default:
         console.log('waiting for message', msg);
     }
