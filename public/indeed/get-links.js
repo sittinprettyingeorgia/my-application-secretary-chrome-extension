@@ -36,6 +36,7 @@
         return map;
       };
 
+      //TODO: all local storage calls should be replace by our rest api
       const getAllStorageLocalData = (key) => {
         return new Promise((resolve, reject) => {
           chrome.storage.local.get([key], (items) => {
@@ -51,7 +52,7 @@
         if (!val || !key) {
           return;
         }
-
+        //TODO: all local storage calls should be replace by our rest api
         chrome.storage.local.set({ [key]: val }, () => {
           console.log('Value is set to ' + JSON.stringify(val));
         });
@@ -90,6 +91,7 @@
           data: user,
         });
 
+        //TODO: all local storage calls should be replace by our rest api
         await setStorageLocalData('indeed', {
           applicationName: 'indeed',
           user,

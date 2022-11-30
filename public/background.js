@@ -24,6 +24,7 @@ const establishJobLinkConnection = (msg, port, messageId) => {
 };
 // retrieve job links for a user
 const handleJobLinksTab = async (tabId, changeInfo, tab) => {
+  //TODO: all local storage calls should be replace by our rest api
   const appInfo = {
     ...(await getAllStorageLocalData('indeed').then((items) => items)),
   };
@@ -42,6 +43,7 @@ const handleJobLinksTab = async (tabId, changeInfo, tab) => {
 };
 // retrieve job links for a user
 const handleJobLinksWebNav = async () => {
+  //TODO: all local storage calls should be replace by our rest api
   const appInfo = {
     ...(await getAllStorageLocalData('indeed').then((items) => items)),
   };
@@ -110,11 +112,12 @@ const onClickWorker = async (tab) => {
         jobLinksLimit: 600,
         firstName: 'Mitchell',
         lastName: 'Blake',
-        jobLinks: ['https://testlink.com'],
+        jobLinks: [],
         jobPostingPreferredAge: 7,
         jobLinkCollectionInProgress: true,
       },
     };
+    //TODO: all local storage calls should be replace by our rest api
     await setStorageLocalData('indeed', mockInfo);
     let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=7`;
     await chrome.tabs.create({ url });
@@ -127,6 +130,7 @@ const onClickWorker = async (tab) => {
 const jobLinkFilters = {
   url: [{ hostSuffix: 'indeed.com' }],
 };
+
 //this is where we communicate with our content scripts.
 chrome.runtime.onConnect.addListener(handleMessaging);
 
@@ -135,7 +139,6 @@ chrome.action.onClicked.addListener(onClickWorker);
 
 // this should repeatedly run the get-links script until it is complete
 //chrome.tabs.onUpdated.addListener(handleJobLinksTab(tabId, changeInfo, tab));
-
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   await handleJobLinksTab(tabId, changeInfo, tab);
 });
