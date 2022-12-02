@@ -7,6 +7,18 @@ import { setStorageLocalData, getAllStorageLocalData } from './util.js';
  * UTIL
  *
  ******************************************/
+/**
+ * Remove a link from our stored and local links map
+ * @param {key:href, val:href} links
+ */
+const deleteHref = (links, hrefToBeDeleted) => {
+  const appInfo = getAppInfo(hrefToBeDeleted);
+  delete links[appInfo.href];
+
+  //window.localStorage.setItem(LINKS, JSON.stringify(links));
+  console.log('FINISHED RUNNING APP SCRIPT', Object.keys(links).length);
+  return links;
+};
 const REGEX = {
   CONTAINS_JOB_POSTING: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
   JOB_POSTING_URL: 'indeed.com/viewjob',
@@ -126,11 +138,6 @@ const JOB_LINKS_WORKER = {
     }
   },
 };
-
-const jobLinkFilters = {
-  url: [{ hostSuffix: 'indeed.com' }],
-};
-
 /*****************************************
  *
  * APPLY-NOW
@@ -228,9 +235,19 @@ chrome.webNavigation.onTabReplaced.addListener(
 );
 
 // Get Job Links
+const jobLinkFilters = {
+  url: [{ urlMatches: REGEX.CONTAINS_JOBS_LINKS }],
+};
 chrome.webNavigation.onHistoryStateUpdated.addListener(
   async () => await handleTabChange(),
   jobLinkFilters
 );
 
 // Apply Now
+const applyNowFilters = {
+  url: [{ urlContains: REGEX.CONTAINS_JOB_POSTING }],
+};
+chrome.webNavigation.onHistoryStateUpdated.addListener(
+  async () => await handleTabChange(),
+  applyNowFilters
+);

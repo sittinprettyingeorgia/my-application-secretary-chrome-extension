@@ -34,36 +34,6 @@ export enum KEYS {
   LINKS = 'links',
   APP_INFO = 'appInfo',
 }
-// application button text variations
-export const APPLY = {
-  NOW: 'Apply now',
-  APPLIED: 'Applied',
-  COMPANY_SITE: 'Apply on company site',
-};
-
-// query selector prefix combinations
-export const PREFIX = 'data-indeed-apply-';
-export const APP_INFO = {
-  apiToken: 'apitoken',
-  advNum: 'advnum',
-  continueUrl: 'continueurl',
-  coverletter: 'coverletter',
-  jobUrl: 'joburl',
-  postUrl: 'posturl',
-  questions: 'questions',
-  jK: 'jk',
-  jobCompany: 'jobcompanyname',
-  jobId: 'jobid',
-  jobLocation: 'joblocation',
-  jobTitle: 'jobtitle',
-  noButtonUI: 'nobuttonui',
-  onAppliedStatus: 'onappliedstatus',
-  onReady: 'onready',
-  phone: 'phone',
-  pingbackUrl: 'pingbackurl',
-  recentSearchQuery: 'recentsearchquery',
-  resume: 'resume',
-};
 
 //APP FORM CONSTANTS | handle-app-form.js
 export const SUBMIT = {

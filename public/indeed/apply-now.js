@@ -1,61 +1,52 @@
 (async () => {
   if (document.readyState === 'complete') {
     const handleApplyNow = async () => {
-      const REGEX = {
-        CONTAINS_APPS: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
-        CONTAINS_FORM: /\bhttps:\/\/m5.apply.indeed.com\/\b/gi,
-        CONTAINS_JOBS: /\bhttps:\/\/www.indeed.com\/jobs\b/gi,
-        JOB_WINDOW: 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=7',
-      };
-
       // application button text variations
       const APPLY = {
         NOW: 'Apply now',
         APPLIED: 'Applied',
         COMPANY_SITE: 'Apply on company site',
       };
-
-      const getAllStorageLocalData = (key) => {
-        return new Promise((resolve, reject) => {
-          chrome.storage.local.get([key], (items) => {
-            if (chrome.runtime.lastError) {
-              return reject(chrome.runtime.lastError);
-            }
-
-            resolve(items);
-          });
-        });
+      const INDEED_QUERY_SELECTOR = {
+        APPLY_BUTTON: '.ia-IndeedApplyButton',
+        APPLY_BUTTON_ID: '#indeedApplyButton',
+        APPLY_BUTTON_WRAPPER: '.jobsearch-IndeedApplyButton-buttonWrapper',
+        APPLY_WIDGET: '.indeed-apply-widget',
+        JOB_LINKS: '.jobTitle a',
+        NAV_CONTAINER: 'nav[role=navigation',
+        PAGINATION_ELEM1: 'a[data-testid=pagination-page-next]',
+        PAGINATION_ELEM2: 'a[aria-label=Next]',
       };
-      const setStorageLocalData = async (key, val) => {
-        if (!val || !key) {
-          return;
-        }
-
-        chrome.storage.local.set({ [key]: val }, () => {
-          console.log('Value is set to ' + JSON.stringify(val));
-        });
+      const APP_INFO = {
+        apiToken: 'apitoken',
+        advNum: 'advnum',
+        continueUrl: 'continueurl',
+        coverletter: 'coverletter',
+        jobUrl: 'joburl',
+        postUrl: 'posturl',
+        questions: 'questions',
+        jK: 'jk',
+        jobCompany: 'jobcompanyname',
+        jobId: 'jobid',
+        jobLocation: 'joblocation',
+        jobTitle: 'jobtitle',
+        noButtonUI: 'nobuttonui',
+        onAppliedStatus: 'onappliedstatus',
+        onReady: 'onready',
+        phone: 'phone',
+        pingbackUrl: 'pingbackurl',
+        recentSearchQuery: 'recentsearchquery',
+        resume: 'resume',
       };
-
-      /**
-       * Remove a link from our stored and local links map
-       * @param {key:href, val:href} links
-       */
-      const deleteHref = (links, hrefToBeDeleted) => {
-        const appInfo = getAppInfo(hrefToBeDeleted);
-        delete links[appInfo.href];
-
-        //window.localStorage.setItem(LINKS, JSON.stringify(links));
-        console.log('FINISHED RUNNING APP SCRIPT', Object.keys(links).length);
-        return links;
-      };
+      const PREFIX = 'data-indeed-apply-';
 
       /**
        * Return the apply to job button which may have three values:  EX.(Apply now, Applied, or Apply on company site)
-       * @param appWindow the current href value from our links object.
+       * @param currentUrl the current href value from our links object.
        * @throws Exception if this button is not an Apply Now Button.
        * @returns
        */
-      const getApplyButton = (currentUrl, links) => {
+      const getApplyButton = (currentUrl) => {
         //we may need to extract this document value from the applyWindow parameter.
         const tryId = document
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
@@ -69,35 +60,18 @@
           );
 
         return (
-          handleApplyNowNotFound(tryId, currentUrl, links) ??
-          handleApplyNowNotFound(tryButton, currentUrl, links)
+          handleApplyNowNotFound(tryId, currentUrl) ??
+          handleApplyNowNotFound(tryButton, currentUrl)
         );
-      };
-
-      /**
-       * Retrieve the next job url from our stored links
-       * @param {Records<string, string>} links a map of the links from localStorage
-       * @param {string} oldHref the recently utilized link
-       */
-      const getNewHref = (oldHref, links) => {
-        delete links[oldHref];
-
-        const newHref = Object.keys(links).pop();
-
-        if (newHref === undefined) {
-          throw new Error('The url is undefined.');
-        }
-
-        return newHref;
       };
 
       /**
        * Retrieves information about our current job application from webpage
        *
-       * @param {string} appWindow : an href string of the current job application.
+       * @param {string} currentUrl : an href string of the current job application.
        * @returns {object} currentAppInfo : an object containing all information about the job application
        */
-      const getAppInfo = (appWindow) => {
+      const getAppInfo = (currentUrl) => {
         const applyWidget = document
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_WIDGET);
@@ -118,7 +92,8 @@
           }
         }
 
-        currentAppInfo[HREF] = appWindow;
+        currentAppInfo[HREF] = currentUrl;
+        console.log('currentAppInfo', JSON.stringify(currentAppInfo));
         return currentAppInfo;
       };
 
