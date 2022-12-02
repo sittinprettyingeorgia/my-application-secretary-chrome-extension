@@ -43,11 +43,17 @@ export type Qualifications = Partial<{
   vue: number;
 }>;
 
-export type JobReqs = Partial<{
+export type JobPreferences = Partial<{
   jobTypes: JobType[]; //list of jobs a user will accept (part-time, contract, full-time)
   salaryReq: number;
-  expReq: number;
+  expLvl: number;
   preferredLocation: string;
+  preferredAge: JobPostAgeInDays;
+  qualifications: Qualifications;
+  education: Education[];
+  blacklist: string[]; //list of companies this user does not want to apply for.
+  redGreenKeywords: Record<string, string>; // red: fast-paced, green: work-life-balance
+  jobLinksLimit: number;
 }>;
 
 // Jobs should be collected during scrape and sent to backend for filtering.
@@ -64,25 +70,18 @@ export type Job = Partial<{
 
 export type User = Partial<{
   userId: string;
-  jobLinksLimit: number;
   firstName: string;
   lastName: string;
   questionsAndAnswers: Record<string, string>; // both known(q & a) and unknown(just question no answer)
-  redGreenKeywords: Record<string, string>; // red: fast-paced, green: work-life-balance
-  jobReqs: JobReqs;
-  blacklist: string[]; //list of companies this user does not want to apply for.
-  education: Education[];
-  expLvl: ExpLvl;
-  qualifications: Qualifications;
+  JobPreferences: JobPreferences;
   jobLinks: Record<string, string>; // url : url
-  jobsApplied: Record<string, Job>; // url : Job
-  jobPostingPreferredAge: JobPostAgeInDays;
+  jobsApplied: Record<string, Job>; // url : Job TODO: work out data analysis etc later
   jobLinkCollectionInProgress: boolean;
 }>;
 
 // TODO:
 // we will need storage for links previously visited
-// so we don't apply to the same place multiple times.
+// so we don't apply to the same place multiple times. maybe?
 // This should store all information for a single user in relation to an application(indeed, ziprecruiter, linkedin, etc)
 export type Application = Partial<{
   applicationName: string;

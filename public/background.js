@@ -17,11 +17,6 @@ const getCurrentTab = async () => {
  *
  * JOB LINKS
  ******************************************/
-// establish a connection with a job-link content-script
-const establishJobLinkConnection = (msg, port, messageId) => {
-  console.log(msg.status);
-  port.postMessage({ response: 'connected', messageId });
-};
 // retrieve job links for a user
 const handleJobLinksTab = async (tabId, changeInfo, tab) => {
   //TODO: all local storage calls should be replace by our rest api
@@ -59,11 +54,63 @@ const handleJobLinksWebNav = async () => {
     });
   }
 };
+// handle messaging with job-links content script
+const handleJobLinkMessaging = (msg, port, messageId) => {
+  switch (msg.status) {
+    case 'connecting job-links messenger':
+      establishConnection(msg, port, messageId);
+      break;
+    case 'completed job-links scan':
+      //content-script has scanned all job pages; we can move on
+      break;
+    case 'completed page scan':
+      //content-script has scanned a single job page
+      console.log(msg);
+      break;
+    case 'connection received, starting job scan':
+      console.log(msg.status);
+      break;
+    case 'waiting for message':
+      console.log('script did not receive background message');
+    case 'debug':
+      console.log(msg.debug);
+    default:
+      console.log('waiting for message', msg);
+  }
+};
 
+/*****************************************
+ *
+ * APPLY-NOW
+ ******************************************/
+const handleApplyNowMessaging = (msg, port, messageId) => {
+  switch (msg.status) {
+    case 'connecting apply-now messenger':
+      establishConnection(msg, port, messageId);
+      break;
+    case 'completed apply-now':
+      //content-script has scanned all job pages; we can move on
+      break;
+    case 'connection received, starting apply-now':
+      console.log(msg.status);
+      break;
+    case 'waiting for message':
+      console.log('script did not receive background message');
+    case 'debug':
+      console.log(msg.debug);
+    default:
+      console.log('waiting for message', msg);
+  }
+};
 /*****************************************
  *
  * MESSAGING
  ******************************************/
+// establish a connection with a content-script
+const establishConnection = (msg, port, messageId) => {
+  console.log(msg.status);
+  port.postMessage({ response: 'connected', messageId });
+};
 // handleExtensionMessagingTo/From content scripts
 const handleMessaging = (port) => {
   // Asynchronously retrieve data from storage.sync, then cache it.
@@ -73,26 +120,13 @@ const handleMessaging = (port) => {
     .substring(1);
 
   port.onMessage.addListener(async (msg) => {
-    switch (msg.status) {
-      case 'connecting job-links messenger':
-        establishJobLinkConnection(msg, port, messageId);
+    switch (port.name) {
+      case 'get-links':
+        handleJobLinkMessaging(msg, port, messageId);
         break;
-      case 'completed job-links scan':
-        //content-script has scanned all job pages; we can move on
+      case 'apply-now':
+        handleApplyNowMessaging(msg, port, messageId);
         break;
-      case 'completed page scan':
-        //content-script has scanned a single job page
-        console.log(msg);
-        break;
-      case 'connection received, starting job scan':
-        console.log(msg.status);
-        break;
-      case 'waiting for message':
-        console.log('script did not receive background message');
-      case 'debug':
-        console.log(msg.debug);
-      case 'debugm':
-        console.log(msg.debug);
       default:
         console.log('waiting for message', msg);
     }
@@ -105,20 +139,21 @@ const handleMessaging = (port) => {
  ******************************************/
 const onClickWorker = async (tab) => {
   try {
-    let mockInfo = {
+    /*let mockInfo = {
       applicationName: 'indeed',
       user: {
         userId: '1',
-        jobLinksLimit: 600,
         firstName: 'Mitchell',
         lastName: 'Blake',
         jobLinks: [],
-        jobPostingPreferredAge: 7,
+        jobPreferences: {
+          jobLinksLimit: 60,
+        },
         jobLinkCollectionInProgress: true,
       },
     };
     //TODO: all local storage calls should be replace by our rest api
-    await setStorageLocalData('indeed', mockInfo);
+    await setStorageLocalData('indeed', mockInfo);*/
     let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=7`;
     await chrome.tabs.create({ url });
   } catch (e) {
@@ -138,7 +173,7 @@ chrome.runtime.onConnect.addListener(handleMessaging);
 chrome.action.onClicked.addListener(onClickWorker);
 
 // this should repeatedly run the get-links script until it is complete
-//chrome.tabs.onUpdated.addListener(handleJobLinksTab(tabId, changeInfo, tab));
+// chrome.tabs.onUpdated.addListener(handleJobLinksTab(tabId, changeInfo, tab));
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   await handleJobLinksTab(tabId, changeInfo, tab);
 });

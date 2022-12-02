@@ -36,7 +36,6 @@
         return map;
       };
 
-      //TODO: all local storage calls should be replace by our rest api
       const getAllStorageLocalData = (key) => {
         return new Promise((resolve, reject) => {
           chrome.storage.local.get([key], (items) => {
@@ -52,7 +51,7 @@
         if (!val || !key) {
           return;
         }
-        //TODO: all local storage calls should be replace by our rest api
+
         chrome.storage.local.set({ [key]: val }, () => {
           console.log('Value is set to ' + JSON.stringify(val));
         });
@@ -102,13 +101,10 @@
        * crawls pages and collects job links
        */
       const collectLinks = async (user, port, messageId) => {
-        let {
-          jobLinks = [],
-          jobPostingPreferredAge = 14,
-          jobLinksLimit = 600,
-        } = user ?? {};
+        let { jobLinks = [], jobPreferences = {} } = user ?? {};
 
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
+        const { jobLinksLimit } = jobPreferences;
         const newJobLinks = constructMap(jobLinks);
 
         const gotoNextPage = (newJobLinks) => {
@@ -207,6 +203,7 @@
           console.log(e);
         }
 
+        console.log('past storage recoveruy');
         const user = appInfo?.indeed?.user;
         await collectLinks(user, port, messageId);
       };
@@ -236,7 +233,7 @@
             await handleConnectedAction(port, msg);
             break;
           case 'waiting for message':
-            console.log('background did not receive background message');
+            console.log('background did not receive message');
           default:
             port.postMessage({ status: 'waiting for message...' });
         }

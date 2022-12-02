@@ -90,20 +90,6 @@ export const getCurrentTab = async () => {
   return tab;
 };
 
-// convert array to map
-const constructMap = (arr) => {
-  return new Map(
-    arr.map((val) => {
-      return [val, val];
-    })
-  );
-};
-
-///convert map to arry
-const constructArr = (map) => {
-  return Object.keys(map);
-};
-
 /*let myWindow = window.location.href;
       
             if (myWindow.search(REGEX.CONTAINS_JOBS) < 0) {
@@ -123,3 +109,7 @@ const MOUSE = {
 const HTML_ELEMENT = {
   BUTTON: 'button',
 };
+
+// we need a util function that cleans all jobLinks
+// cleaning a job link verifies it is within the
+// date range for a valid job link
