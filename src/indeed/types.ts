@@ -77,6 +77,7 @@ export type User = Partial<{
   jobLinks: Record<string, string>; // url : url
   jobsApplied: Record<string, Job>; // url : Job TODO: work out data analysis etc later
   jobLinkCollectionInProgress: boolean;
+  applyNowInProgress: boolean;
 }>;
 
 // TODO:

@@ -221,7 +221,6 @@
           status: 'connection received, starting job scan',
         });
 
-        //messaging works but handleJobLinksRetrieval is failing
         await handleJobLinksRetrieval(port, msg.messageId);
       };
 
