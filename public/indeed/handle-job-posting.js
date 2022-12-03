@@ -47,6 +47,17 @@
 
         return elem;
       };
+      const getAllStorageLocalData = (key) => {
+        return new Promise((resolve, reject) => {
+          chrome.storage.local.get([key], (items) => {
+            if (chrome.runtime.lastError) {
+              return reject(chrome.runtime.lastError);
+            }
+
+            resolve(items);
+          });
+        });
+      };
 
       /**
        * Return the apply to job button which may have three values:  EX.(Apply now, Applied, or Apply on company site)
@@ -104,11 +115,9 @@
       };
 
       const validateApplyNow = async (user, port, messageId) => {
+        let { jobLinks = [] } = user ?? {};
+        const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
         try {
-          let { jobLinks = [] } = user ?? {};
-          const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
-
-          let currentUrl = window.location.href;
           let applyNowButton;
           try {
             applyNowButton = getApplyButton(port);

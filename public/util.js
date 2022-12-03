@@ -45,22 +45,14 @@ export const setStorageSyncData = async (key, val) => {
     return;
   }
 
-  chrome.storage.sync.set({ [key]: val }, () => {
-    //console.log('Value is set to ' + JSON.stringify(val));
-  });
-
-  console.log('Successfully stored information');
+  chrome.storage.sync.set({ [key]: val }, () => {});
 };
 export const setStorageLocalData = async (key, val) => {
   if (!val || !key) {
     return;
   }
 
-  chrome.storage.local.set({ [key]: val }, () => {
-    console.log('Value is set to ' + JSON.stringify(val));
-  });
-
-  console.log('Successfully stored information');
+  chrome.storage.local.set({ [key]: val }, () => {});
 };
 
 /*****************************************
@@ -111,7 +103,6 @@ export const handleTabChange = async () => {
     if (getLinks) {
       handleNavigation('get-links', tab.id);
     } else if (handleJobPosting) {
-      console.log('inside handleJobPosting condition');
       handleNavigation('handle-job-posting', tab.id);
     }
   }
