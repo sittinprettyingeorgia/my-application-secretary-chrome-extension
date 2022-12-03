@@ -5,7 +5,8 @@
       const DEFAULTS = {
         limit: 600,
       };
-
+      const STORAGE_KEY = 'indeed';
+      const INDEED_BASE = 'https://www.indeed.com';
       const INDEED_QUERY_SELECTOR = {
         APPLY_BUTTON: '.ia-IndeedApplyButton',
         APPLY_BUTTON_ID: '#indeedApplyButton',
@@ -16,7 +17,8 @@
         PAGINATION_ELEM1: 'a[data-testid=pagination-page-next]',
         PAGINATION_ELEM2: 'a[aria-label=Next]',
       };
-
+      const COMPLETED = 'completed job-links scan';
+      const COMPLETED_PAGE = 'completed page scan';
       const constructMap = (arr) => {
         let map = {};
 
@@ -73,19 +75,25 @@
         port,
         user,
         status,
-        inProgress
+        jobLinkCollectionInProgress
       ) => {
-        user.jobLinkCollectionInProgress = inProgress;
+        user.jobLinkCollectionInProgress = jobLinkCollectionInProgress;
+        user.applyNowInProgress = true;
+        user.jobLinks.sort();
 
         port.postMessage({
           status,
-          data: user,
+          data: { ...user },
         });
 
-        await setStorageLocalData('indeed', {
-          applicationName: 'indeed',
-          user,
+        await setStorageLocalData(STORAGE_KEY, {
+          applicationName: STORAGE_KEY,
+          user: { ...user },
         });
+
+        if (status === COMPLETED) {
+          window.location.replace(INDEED_BASE + user.jobLinks.pop());
+        }
       };
 
       /**
@@ -118,10 +126,10 @@
           user.jobLinks = [...user.jobLinks, ...newJobLinks];
 
           if (paginationNext !== null) {
-            sendScanCompleteMessage(port, user, 'completed page scan', true);
+            sendScanCompleteMessage(port, user, COMPLETED_PAGE, true);
             paginationNext.click();
           } else if (paginationNext2 !== null) {
-            sendScanCompleteMessage(port, user, 'completed page scan', true);
+            sendScanCompleteMessage(port, user, COMPLETED_PAGE, true);
             paginationNext2.click();
           }
         };
@@ -151,12 +159,7 @@
           ) {
             await getPageJobLinks(port);
           } else {
-            await sendScanCompleteMessage(
-              port,
-              user,
-              'completed job-links scan',
-              false
-            );
+            await sendScanCompleteMessage(port, user, COMPLETED, false);
           }
 
           result.jobLinks = newJobLinks;

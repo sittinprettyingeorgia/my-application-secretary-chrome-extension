@@ -40,7 +40,7 @@
       };
       const PREFIX = 'data-indeed-apply-';
 
-      const handleApplyNowNotFound = (elem, port) => {
+      const handleApplyNowNotFound = (elem) => {
         if (!elem || elem.textContent !== APPLY.NOW) {
           throw new Error('Job posting is not apply-now');
         }
@@ -54,7 +54,7 @@
        * @throws Exception if this button is not an Apply Now Button.
        * @returns
        */
-      const getApplyButton = (currentUrl, port) => {
+      const getApplyButton = () => {
         const tryId = document
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON_WRAPPER)
@@ -67,8 +67,7 @@
           );
 
         return (
-          handleApplyNowNotFound(tryId, port) ??
-          handleApplyNowNotFound(tryButton, port)
+          handleApplyNowNotFound(tryId) ?? handleApplyNowNotFound(tryButton)
         );
       };
 
@@ -112,7 +111,7 @@
           let currentUrl = window.location.href;
           let applyNowButton;
           try {
-            applyNowButton = getApplyButton(currentUrl, links);
+            applyNowButton = getApplyButton(port);
             applyNowButton.click();
           } catch (e) {
             //this is not an apply now job posting

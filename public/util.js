@@ -81,32 +81,6 @@ const simulateApplyNow = (applyNowButton) => {
 
 /*****************************************
  *
- * MESSAGING
- ******************************************/
-// handleExtensionMessagingTo/From content scripts
-export const handleMessaging = (port) => {
-  // Asynchronously retrieve data from storage.sync, then cache it.
-  // Generate a random 4-char key to avoid clashes if called multiple times
-  let messageId = Math.floor((1 + Math.random()) * 0x10000)
-    .toString(16)
-    .substring(1);
-
-  port.onMessage.addListener(async (msg) => {
-    switch (port.name) {
-      case 'get-links':
-        JOB_LINKS_WORKER.handleJobLinkMessaging(msg, port, messageId);
-        break;
-      case 'handle-job-posting':
-        JOB_POSTING_WORKER.handleApplyNowMessaging(msg, port, messageId);
-        break;
-      default:
-        console.log('waiting for message', msg);
-    }
-  });
-};
-
-/*****************************************
- *
  * NAVIGATION
  ******************************************/
 export const REGEX = {
@@ -126,18 +100,19 @@ export const handleTabChange = async () => {
 
   let tab = await getCurrentTab();
 
-  if (tab.url) {
+  if (tab?.url) {
     const getLinks =
       tab.url.match(REGEX.JOB_LINK_URL) &&
       appInfo?.indeed?.user?.jobLinkCollectionInProgress;
-    const applyNow =
+    const handleJobPosting =
       tab.url.match(REGEX.JOB_POSTING_URL) &&
       appInfo?.indeed?.user?.applyNowInProgress;
 
     if (getLinks) {
       handleNavigation('get-links', tab.id);
-    } else if (applyNow) {
-      handleNavigation('job-posting', tab.id);
+    } else if (handleJobPosting) {
+      console.log('inside handleJobPosting condition');
+      handleNavigation('handle-job-posting', tab.id);
     }
   }
 };
@@ -233,7 +208,7 @@ export const establishConnection = (msg, fields) => {
  * JOB LINKS WORK
  ******************************************/
 export const JOB_LINKS_WORKER = {
-  main: async (tab) => {
+  main: async () => {
     try {
       let mockInfo = {
         applicationName: 'indeed',
@@ -268,15 +243,13 @@ export const JOB_LINKS_WORKER = {
       case 'completed job-links scan':
         //content-script has scanned all job pages and stored info
         //we can move on to apply now
-        console.log(msg.status);
         break;
       case 'connection received, starting job scan':
-        console.log(msg.status);
         break;
       case 'waiting for message':
-        console.log('script did not receive background message');
+        break;
       case 'There was an error collecting job links':
-        console.log(JSON.stringify(msg.data));
+        break;
       default:
         console.log('waiting for actionable message...', msg);
     }
@@ -325,7 +298,7 @@ export const JOB_POSTING_WORKER = {
   handleJobPostingMessaging: (msg, port, messageId) => {
     switch (msg.status) {
       case 'connecting handle-job-posting messenger':
-        establishApplyNowConnection(msg, port, messageId);
+        establishConnection(msg, { port, messageId });
         break;
       case 'job posting is not apply-now':
         deleteHref(msg.url);
@@ -344,4 +317,30 @@ export const JOB_POSTING_WORKER = {
         console.log('waiting for message', msg);
     }
   },
+};
+
+/*****************************************
+ *
+ * MESSAGING
+ ******************************************/
+// handleExtensionMessagingTo/From content scripts
+export const handleMessaging = (port) => {
+  // Asynchronously retrieve data from storage.sync, then cache it.
+  // Generate a random 4-char key to avoid clashes if called multiple times
+  let messageId = Math.floor((1 + Math.random()) * 0x10000)
+    .toString(16)
+    .substring(1);
+
+  port.onMessage.addListener(async (msg) => {
+    switch (port.name) {
+      case 'get-links':
+        JOB_LINKS_WORKER.handleJobLinkMessaging(msg, port, messageId);
+        break;
+      case 'handle-job-posting':
+        JOB_POSTING_WORKER.handleJobPostingMessaging(msg, port, messageId);
+        break;
+      default:
+        console.log('waiting for message', msg);
+    }
+  });
 };
