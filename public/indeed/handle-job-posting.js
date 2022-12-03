@@ -40,14 +40,21 @@
       };
       const PREFIX = 'data-indeed-apply-';
 
+      const handleApplyNowNotFound = (elem, port) => {
+        if (!elem || elem.textContent !== APPLY.NOW) {
+          throw new Error('Job posting is not apply-now');
+        }
+
+        return elem;
+      };
+
       /**
        * Return the apply to job button which may have three values:  EX.(Apply now, Applied, or Apply on company site)
        * @param currentUrl the current href value from our links object.
        * @throws Exception if this button is not an Apply Now Button.
        * @returns
        */
-      const getApplyButton = (currentUrl) => {
-        //we may need to extract this document value from the applyWindow parameter.
+      const getApplyButton = (currentUrl, port) => {
         const tryId = document
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON_WRAPPER)
@@ -60,8 +67,8 @@
           );
 
         return (
-          handleApplyNowNotFound(tryId, currentUrl) ??
-          handleApplyNowNotFound(tryButton, currentUrl)
+          handleApplyNowNotFound(tryId, port) ??
+          handleApplyNowNotFound(tryButton, port)
         );
       };
 
@@ -97,18 +104,6 @@
         return currentAppInfo;
       };
 
-      const handleApplyNowNotFound = (elem) => {
-        if (!elem || elem.textContent !== APPLY.NOW) {
-          const status = 'job posting is not apply-now';
-          const url = window.location.href;
-
-          port.postMessage({ status, url });
-          throw new Error(status);
-        }
-
-        return elem;
-      };
-
       const validateApplyNow = async (user, port, messageId) => {
         try {
           let { jobLinks = [] } = user ?? {};
@@ -118,19 +113,12 @@
           let applyNowButton;
           try {
             applyNowButton = getApplyButton(currentUrl, links);
+            applyNowButton.click();
           } catch (e) {
             //this is not an apply now job posting
             const status = 'job posting is not apply-now';
             const url = window.location.href;
             port.postMessage({ status, url });
-          }
-
-          if (
-            applyNowButton !== null &&
-            applyNowButton?.textContent === APPLY.NOW
-          ) {
-            currentUrl && setAppInfo(currentUrl);
-            applyNowButton.click();
           }
         } catch (e) {
           // Make an explicit copy of the Error properties
