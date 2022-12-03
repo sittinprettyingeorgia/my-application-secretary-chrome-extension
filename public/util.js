@@ -90,14 +90,6 @@ export const getCurrentTab = async () => {
   return tab;
 };
 
-/*let myWindow = window.location.href;
-      
-            if (myWindow.search(REGEX.CONTAINS_JOBS) < 0) {
-              // TODO: this url should be updated later to be dynamic based on user preferences.
-              let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=${jobPostingPreferredAge}`;
-              window.location.replace(url);
-            }*/
-
 // Event types
 const MOUSE = {
   CLICK: 'click',
@@ -110,6 +102,97 @@ const HTML_ELEMENT = {
   BUTTON: 'button',
 };
 
-// we need a util function that cleans all jobLinks
-// cleaning a job link verifies it is within the
-// date range for a valid job link
+/**
+ * Remove a link from our users jobLinks
+ * @param {key:href, val:href} links
+ */
+export const deleteHref = async (hrefToBeDeleted) => {
+  try {
+    const appInfo = {
+      ...(await getAllStorageLocalData('indeed').then((items) => items)),
+    };
+
+    if (!appInfo?.indeed?.user) {
+      throw new Error('Please create a user');
+    } else if (
+      !appInfo.indeed.user?.jobLinks ||
+      appInfo.indeed.user?.jobLinks.length < 1
+    ) {
+      throw new Error('No job links stored');
+    }
+
+    const user = appInfo.indeed.user;
+    const jobLinks = user.jobLinks;
+    jobLinks.sort();
+    jobLinks.pop();
+    user.jobLinks = [...jobLinks];
+
+    await setStorageLocalData('indeed', {
+      applicationName: 'indeed',
+      user,
+    });
+  } catch (e) {
+    // Handle error that occurred during storage initialization.
+    console.log('could not retrieve application information');
+    console.log(e);
+  }
+};
+
+export const establishConnection = (msg, fields) => {
+  const { port, ...otherFields } = fields ?? {};
+
+  console.log(msg.status);
+  port.postMessage({ response: 'connected', ...otherFields });
+};
+
+/*****************************************
+ *
+ * JOB LINKS WORK
+ ******************************************/
+export const JOB_LINKS_WORKER = {
+  main: async (tab) => {
+    try {
+      let mockInfo = {
+        applicationName: 'indeed',
+        user: {
+          userId: '1',
+          firstName: 'Mitchell',
+          lastName: 'Blake',
+          jobLinks: [],
+          jobPreferences: {
+            jobLinksLimit: 60,
+          },
+          jobLinkCollectionInProgress: true,
+        },
+      };
+      //TODO: all local storage calls should be replace by our rest api
+      await setStorageLocalData('indeed', mockInfo);
+      let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=7`;
+      await chrome.tabs.create({ url });
+    } catch (e) {
+      console.log(e?.message);
+      console.log(e);
+    }
+  },
+  handleJobLinkMessaging: (msg, port, messageId) => {
+    switch (msg.status) {
+      case 'connecting job-links messenger':
+        establishConnection(msg, { port, messageId });
+        break;
+      case 'completed job-links scan':
+        //content-script has scanned all job pages and stored info
+        //we can move on to apply now
+        console.log(msg.status);
+        break;
+      case 'connection received, starting job scan':
+        console.log(msg.status);
+        break;
+      case 'waiting for message':
+        console.log('script did not receive background message');
+      case 'There was an error collecting job links':
+        console.log(JSON.stringify(msg.data));
+      default:
+        console.log('waiting for actionable message...', msg);
+    }
+  },
+};

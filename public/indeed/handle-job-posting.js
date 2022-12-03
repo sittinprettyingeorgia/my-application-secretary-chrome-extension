@@ -97,11 +97,13 @@
         return currentAppInfo;
       };
 
-      const handleApplyNowNotFound = (elem, currentUrl, links) => {
+      const handleApplyNowNotFound = (elem) => {
         if (!elem || elem.textContent !== APPLY.NOW) {
-          delete links[currentUrl];
+          const status = 'job posting is not apply-now';
+          const url = window.location.href;
 
-          return links;
+          port.postMessage({ status, url });
+          throw new Error(status);
         }
 
         return elem;
@@ -123,17 +125,14 @@
           const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
 
           let currentUrl = window.location.href;
-
-          currentUrl = linksKeys.pop();
-          window.location.replace(currentUrl);
-
-          console.log('RUNNING APP SCRIPT', Object.keys(links).length);
           let applyNowButton;
           try {
             applyNowButton = getApplyButton(currentUrl, links);
           } catch (e) {
-            console.log(e);
-            currentUrl = getNewHref(currentUrl, links);
+            //this is not an apply now job posting
+            const status = 'job posting is not apply-now';
+            const url = window.location.href;
+            port.postMessage({ status, url });
           }
 
           if (
@@ -157,7 +156,7 @@
         return result;
       };
 
-      const handleJobPosting = async () => {
+      const handleJobPosting = async (port, messageId) => {
         // Asynchronously retrieve data from storage.sync, then cache it.
         let appInfo = {};
 
@@ -192,10 +191,10 @@
        *********************************/
       const handleConnectedAction = async (port, msg) => {
         port.postMessage({
-          status: 'connection received, handling application',
+          status: 'connection received, handling job posting',
         });
 
-        await handleJobPosting(port, msg.jobPostingUrl, msg.messageId);
+        await handleJobPosting(port, msg.messageId);
       };
 
       let port = chrome.runtime.connect({ name: 'apply-now' });

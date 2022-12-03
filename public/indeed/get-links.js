@@ -6,15 +6,6 @@
         limit: 600,
       };
 
-      //APPLY NOW CONSTANTS | apply-now.js
-      const REGEX = {
-        CONTAINS_APPS: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
-        CONTAINS_FORM: /\bhttps:\/\/m5.apply.indeed.com\/\b/gi,
-        CONTAINS_JOBS: /\bhttps:\/\/www.indeed.com\/jobs\b/gi,
-        JOB_WINDOW:
-          'https://www.indeed.com/jobs?q=software&l=Remote&fromage=14',
-      };
-
       const INDEED_QUERY_SELECTOR = {
         APPLY_BUTTON: '.ia-IndeedApplyButton',
         APPLY_BUTTON_ID: '#indeedApplyButton',
@@ -85,12 +76,12 @@
         inProgress
       ) => {
         user.jobLinkCollectionInProgress = inProgress;
+
         port.postMessage({
           status,
           data: user,
         });
 
-        //TODO: all local storage calls should be replace by our rest api
         await setStorageLocalData('indeed', {
           applicationName: 'indeed',
           user,
@@ -102,8 +93,12 @@
        */
       const collectLinks = async (user, port, messageId) => {
         let { jobLinks = [], jobPreferences = {} } = user ?? {};
-
-        const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
+        const result = {
+          asyncFuncID: `${messageId}`,
+          jobLinks,
+          error: {},
+          url: '',
+        };
         const { jobLinksLimit } = jobPreferences;
         const newJobLinks = constructMap(jobLinks);
 
@@ -131,7 +126,7 @@
           }
         };
 
-        const getPageJobLinks = async (user) => {
+        const getPageJobLinks = async () => {
           try {
             const links = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
             for (const link of links) {
@@ -174,9 +169,12 @@
             name: x.name,
             stack: x.stack,
           };
-        }
 
-        return result;
+          const status = 'There was an error collecting job links';
+          const url = window.location.href;
+          result.url = url;
+          port.postMessage({ status, data: result });
+        }
       };
 
       /**
@@ -192,9 +190,7 @@
           };
 
           if (!appInfo?.indeed?.user) {
-            //TODO: we still need to create onboarding
-            window.location.replace('onboarding.html');
-            //TODO: wee need to wait until our onboarding site is loaded
+            //TODO: window.location.replace('onboarding.html');
             throw new Error('Please create a user');
           }
         } catch (e) {
@@ -203,7 +199,6 @@
           console.log(e);
         }
 
-        console.log('past storage recoveruy');
         const user = appInfo?.indeed?.user;
         await collectLinks(user, port, messageId);
       };
@@ -231,10 +226,11 @@
           case 'connected':
             await handleConnectedAction(port, msg);
             break;
-          case 'waiting for message':
+          case 'waiting for actionable message':
             console.log('background did not receive message');
+            break;
           default:
-            port.postMessage({ status: 'waiting for message...' });
+            port.postMessage({ status: 'waiting for actionable message...' });
         }
       });
     };
