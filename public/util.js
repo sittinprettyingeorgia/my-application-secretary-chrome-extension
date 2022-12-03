@@ -96,7 +96,7 @@ export const handleMessaging = (port) => {
       case 'get-links':
         JOB_LINKS_WORKER.handleJobLinkMessaging(msg, port, messageId);
         break;
-      case 'apply-now':
+      case 'handle-job-posting':
         JOB_POSTING_WORKER.handleApplyNowMessaging(msg, port, messageId);
         break;
       default:
@@ -137,7 +137,7 @@ export const handleTabChange = async () => {
     if (getLinks) {
       handleNavigation('get-links', tab.id);
     } else if (applyNow) {
-      handleNavigation('apply-now', tab.id);
+      handleNavigation('job-posting', tab.id);
     }
   }
 };
@@ -153,7 +153,7 @@ export const handleNavigation = (action, tabId) => {
   const navigateToApplyNowScript = async () => {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ['./indeed/apply-now.js'],
+      files: ['./indeed/handle-job-posting.js'],
     });
   };
 
@@ -161,7 +161,7 @@ export const handleNavigation = (action, tabId) => {
     case 'get-links':
       navigateToJobLinksScript();
       break;
-    case 'apply-now':
+    case 'handle-job-posting':
       navigateToApplyNowScript();
   }
 };
@@ -324,13 +324,13 @@ export const JOB_POSTING_WORKER = {
   },
   handleJobPostingMessaging: (msg, port, messageId) => {
     switch (msg.status) {
-      case 'connecting apply-now messenger':
+      case 'connecting handle-job-posting messenger':
         establishApplyNowConnection(msg, port, messageId);
         break;
       case 'job posting is not apply-now':
         deleteHref(msg.url);
         break;
-      case 'completed apply-now':
+      case 'completed handle-job-posting':
         //content-script has scanned all applications; we can move on
         break;
       case 'connection received, handling job posting':

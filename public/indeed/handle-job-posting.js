@@ -109,16 +109,6 @@
         return elem;
       };
 
-      const gotoJobApplicationForm = () => {
-        if (paginationNext !== null) {
-          sendScanCompleteMessage(port, user, 'completed page scan', true);
-          paginationNext.click();
-        } else if (paginationNext2 !== null) {
-          sendScanCompleteMessage(port, user, 'handle job posting', true);
-          paginationNext2.click();
-        }
-      };
-
       const validateApplyNow = async (user, port, messageId) => {
         try {
           let { jobLinks = [] } = user ?? {};
@@ -197,8 +187,8 @@
         await handleJobPosting(port, msg.messageId);
       };
 
-      let port = chrome.runtime.connect({ name: 'apply-now' });
-      port.postMessage({ status: 'connecting apply-now messenger' });
+      let port = chrome.runtime.connect({ name: 'handle-job-posting' });
+      port.postMessage({ status: 'connecting handle-job-posting messenger' });
 
       port.onMessage.addListener(async (msg) => {
         switch (msg.response) {

@@ -5,8 +5,6 @@ import {
   handleTabChange,
   handleMessaging,
 } from './util.js';
-// this should repeatedly run the get-links script until it is complete
-// chrome.tabs.onUpdated.addListener(handleJobLinksTab(tabId, changeInfo, tab));
 /********************************************************************************************
  *
  * SERVICE WORKER CONSTANTS
