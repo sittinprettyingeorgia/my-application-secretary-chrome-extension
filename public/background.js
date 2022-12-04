@@ -2,6 +2,7 @@
 import {
   JOB_LINKS_WORKER,
   JOB_POSTING_WORKER,
+  JOB_FORM_WORKER,
   handleTabChange,
   handleMessaging,
 } from './util.js';
@@ -43,4 +44,10 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(
 chrome.webNavigation.onHistoryStateUpdated.addListener(
   async () => await handleTabChange(),
   JOB_POSTING_WORKER.filter
+);
+
+// Job FORM
+chrome.webNavigation.onHistoryStateUpdated.addListener(
+  async () => await handleTabChange(),
+  JOB_FORM_WORKER.filter
 );

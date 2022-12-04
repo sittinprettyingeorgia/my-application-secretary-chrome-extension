@@ -78,13 +78,8 @@
         jobLinkCollectionInProgress
       ) => {
         user.jobLinkCollectionInProgress = jobLinkCollectionInProgress;
-        user.applyNowInProgress = true;
+        user.jobPostingInProgress = true;
         user.jobLinks.sort();
-
-        port.postMessage({
-          status,
-          data: { ...user },
-        });
 
         await setStorageLocalData(STORAGE_KEY, {
           applicationName: STORAGE_KEY,
@@ -92,7 +87,8 @@
         });
 
         if (status === COMPLETED) {
-          window.location.replace(INDEED_BASE + user.jobLinks.pop());
+          const link = user.jobLinks.pop();
+          window.location.replace(INDEED_BASE + link);
         }
       };
 
@@ -220,6 +216,7 @@
 
         await handleJobLinksRetrieval(port, msg.messageId);
       };
+      console.log('inside get-links');
 
       let port = chrome.runtime.connect({ name: 'get-links' });
       port.postMessage({ status: 'connecting job-links messenger' });

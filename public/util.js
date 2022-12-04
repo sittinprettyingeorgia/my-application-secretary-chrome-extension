@@ -8,6 +8,8 @@ const GET_LINKS = 'get-links';
 const GET_LINKS_PATH = './indeed/get-links.js';
 const HANDLE_JOB_POSTING = 'handle-job-posting';
 const HANDLE_JOB_POSTING_PATH = './indeed/handle-job-posting.js';
+const HANDLE_JOB_FORM = 'handle-job-form';
+const HANDLE_JOB_FORM_PATH = './indeed/handle-job-form.js';
 export const INDEED_SUFFIX = 'indeed.com';
 /*****************************************
  *
@@ -59,21 +61,105 @@ export const setStorageLocalData = async (key, val) => {
 
   chrome.storage.local.set({ [key]: val }, () => {});
 };
+/*****************************************
+ *
+ * HELPER
+ ******************************************/
+const getAppInfo = async () => {
+  const appInfo = {
+    ...(await getAllStorageLocalData(INDEED).then((items) => items)),
+  };
+
+  if (!appInfo?.indeed?.user) {
+    //TODO: window.location.replace('onboarding.html');
+    throw new Error('Please create a user');
+  }
+
+  return appInfo;
+};
+export const getCurrentTab = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+};
+const getTabAndAppInfo = async () => {
+  const appInfo = await getAppInfo();
+  const tab = await getCurrentTab();
+  return [appInfo, tab];
+};
+/**
+ * Remove a link from our users jobLinks
+ * @param {key:href, val:href} links
+ */
+export const deleteHrefAndGoToNext = async () => {
+  try {
+    const [appInfo, _tab] = await getTabAndAppInfo();
+
+    if (
+      !appInfo.indeed.user?.jobLinks ||
+      appInfo.indeed.user?.jobLinks.length < 1
+    ) {
+      throw new Error('No job links stored');
+    }
+
+    const user = appInfo.indeed.user;
+    const jobLinks = [...user.jobLinks];
+    jobLinks.sort();
+    jobLinks.pop();
+    user.jobLinks = [...jobLinks];
+
+    await setStorageLocalData(INDEED, {
+      applicationName: INDEED,
+      user,
+    });
+
+    let url = jobLinks.pop();
+    await chrome.tabs.create({ url });
+  } catch (e) {
+    // Handle error that occurred during storage initialization.
+    console.log('could not retrieve application information');
+    console.log(e);
+  }
+};
+
+export const establishConnection = (msg, fields) => {
+  const { port, ...otherFields } = fields ?? {};
+
+  console.log(msg.status);
+  port.postMessage({ response: 'connected', ...otherFields });
+};
 
 /*****************************************
  *
  * EVENT HANDLING
  ******************************************/
+// Event types
+export const MOUSE = {
+  CLICK: 'click',
+  DOWN: 'mousedown',
+  OVER: 'mouseover',
+  UP: 'mouseup',
+};
+
+export const HTML_ELEMENT = {
+  BUTTON: 'button',
+};
+
 const triggerMouseEvent = (node, eventType) => {
   var clickEvent = document.createEvent('MouseEvents');
   clickEvent.initEvent(eventType, true, true);
   node.dispatchEvent(clickEvent);
 };
 
-const simulateApplyNow = (applyNowButton) => {
+const simulateClick = (applyNowButton) => {
   for (const event of Object.values(MOUSE)) {
     triggerMouseEvent(applyNowButton, event);
   }
+};
+
+const click = async (elem) => {
+  simulateClick(elem);
 };
 
 /*****************************************
@@ -81,34 +167,38 @@ const simulateApplyNow = (applyNowButton) => {
  * NAVIGATION
  ******************************************/
 export const REGEX = {
-  CONTAINS_JOB_POSTING: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
-  JOB_POSTING_URL: 'indeed.com/viewjob',
   CONTAINS_JOB_FORM: /\bhttps:\/\/m5.apply.indeed.com\/\b/gi,
+  CONTAINS_JOB_POSTING: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
   CONTAINS_JOBS_LINKS: /\bhttps:\/\/www.indeed.com\/jobs\b/gi,
+  JOB_FORM_URL: 'https://m5.apply.indeed.com/',
   JOB_LINK_URL: 'indeed.com/jobs',
+  JOB_POSTING_URL: 'indeed.com/viewjob',
   JOB_WINDOW: 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=7',
 };
 
 export const handleTabChange = async () => {
   //TODO: all local storage calls should be replace by our rest api
-  const appInfo = {
-    ...(await getAllStorageLocalData(INDEED).then((items) => items)),
-  };
+  const [appInfo, tab] = await getTabAndAppInfo();
+  const jobLinkCollectionInProgress =
+    appInfo?.indeed?.user?.jobLinkCollectionInProgress;
+  const jobPostingInProgress = appInfo?.indeed?.user?.jobPostingInProgress;
 
-  let tab = await getCurrentTab();
-
-  if (tab?.url) {
+  if (tab?.url && (jobLinkCollectionInProgress || jobPostingInProgress)) {
     const getLinks =
-      tab.url.match(REGEX.JOB_LINK_URL) &&
-      appInfo?.indeed?.user?.jobLinkCollectionInProgress;
+      tab.url.match(REGEX.JOB_LINK_URL) && jobLinkCollectionInProgress;
+
     const handleJobPosting =
-      tab.url.match(REGEX.JOB_POSTING_URL) &&
-      appInfo?.indeed?.user?.applyNowInProgress;
+      tab.url.match(REGEX.JOB_POSTING_URL) && jobPostingInProgress;
+
+    const handleJobForm =
+      tab.url.match(REGEX.JOB_FORM_URL) && jobPostingInProgress;
 
     if (getLinks) {
       handleNavigation(GET_LINKS, tab.id);
     } else if (handleJobPosting) {
       handleNavigation(HANDLE_JOB_POSTING, tab.id);
+    } else if (handleJobForm) {
+      handleNavigation(HANDLE_JOB_FORM, tab.id);
     }
   }
 };
@@ -128,75 +218,25 @@ export const handleNavigation = (action, tabId) => {
     });
   };
 
+  const navigateToFormScript = async () => {
+    console.log('we are about to navigate to our form script.');
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: [HANDLE_JOB_FORM_PATH],
+    });
+  };
+
   switch (action) {
     case GET_LINKS:
       navigateToJobLinksScript();
       break;
     case HANDLE_JOB_POSTING:
       navigateToApplyNowScript();
+      break;
+    case HANDLE_JOB_FORM_PATH:
+      navigateToFormScript();
+      break;
   }
-};
-
-export const getCurrentTab = async () => {
-  let queryOptions = { active: true, lastFocusedWindow: true };
-  // `tab` will either be a `tabs.Tab` instance or `undefined`.
-  let [tab] = await chrome.tabs.query(queryOptions);
-  return tab;
-};
-
-// Event types
-export const MOUSE = {
-  CLICK: 'click',
-  DOWN: 'mousedown',
-  OVER: 'mouseover',
-  UP: 'mouseup',
-};
-
-export const HTML_ELEMENT = {
-  BUTTON: 'button',
-};
-
-/**
- * Remove a link from our users jobLinks
- * @param {key:href, val:href} links
- */
-export const deleteHref = async (hrefToBeDeleted) => {
-  try {
-    const appInfo = {
-      ...(await getAllStorageLocalData('indeed').then((items) => items)),
-    };
-
-    if (!appInfo?.indeed?.user) {
-      throw new Error('Please create a user');
-    } else if (
-      !appInfo.indeed.user?.jobLinks ||
-      appInfo.indeed.user?.jobLinks.length < 1
-    ) {
-      throw new Error('No job links stored');
-    }
-
-    const user = appInfo.indeed.user;
-    const jobLinks = user.jobLinks;
-    jobLinks.sort();
-    jobLinks.pop();
-    user.jobLinks = [...jobLinks];
-
-    await setStorageLocalData('indeed', {
-      applicationName: 'indeed',
-      user,
-    });
-  } catch (e) {
-    // Handle error that occurred during storage initialization.
-    console.log('could not retrieve application information');
-    console.log(e);
-  }
-};
-
-export const establishConnection = (msg, fields) => {
-  const { port, ...otherFields } = fields ?? {};
-
-  console.log(msg.status);
-  port.postMessage({ response: 'connected', ...otherFields });
 };
 
 /*****************************************
@@ -224,7 +264,6 @@ export const JOB_LINKS_WORKER = {
       let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=7`;
       await chrome.tabs.create({ url });
     } catch (e) {
-      console.log(e?.message);
       console.log(e);
     }
   },
@@ -261,14 +300,9 @@ export const JOB_LINKS_WORKER = {
 export const JOB_POSTING_WORKER = {
   main: async (tab) => {
     try {
-      const appInfo = {
-        ...(await getAllStorageLocalData('indeed').then((items) => items)),
-      };
+      const appInfo = getAppInfo();
 
-      if (!appInfo?.indeed?.user) {
-        //TODO: window.location.replace('onboarding.html');
-        throw new Error('Please create a user');
-      } else if (
+      if (
         !appInfo?.indeed?.user?.jobLinks ||
         !appInfo?.indeed?.user?.jobLinks.length < 1
       ) {
@@ -284,7 +318,6 @@ export const JOB_POSTING_WORKER = {
 
       await chrome.tabs.create({ url });
     } catch (e) {
-      console.log(e?.message);
       console.log(e);
     }
   },
@@ -296,8 +329,8 @@ export const JOB_POSTING_WORKER = {
       case 'connecting handle-job-posting messenger':
         establishConnection(msg, { port, messageId });
         break;
-      case 'job posting is not apply-now':
-        deleteHref(msg.url);
+      case 'job posting is not apply-now': //TODO: we cannot get messages from content script apply-now
+        deleteHrefAndGoToNext();
         break;
       case 'completed handle-job-posting':
         //content-script has scanned all applications; we can move on
@@ -305,6 +338,8 @@ export const JOB_POSTING_WORKER = {
       case 'connection received, handling job posting':
         console.log(msg.status);
         break;
+      case 'redirecting to form':
+        console.log(msg.data);
       case 'waiting for message':
         console.log('script did not receive background message');
       case 'debug':
@@ -315,6 +350,43 @@ export const JOB_POSTING_WORKER = {
   },
 };
 
+export const JOB_FORM_WORKER = {
+  main: async (tab) => {
+    try {
+      const appInfo = getAppInfo();
+      console.log('I am running script inside of indeed form HOE!');
+    } catch (e) {
+      console.log(e);
+    }
+  },
+  filter: {
+    url: [{ hostSuffix: INDEED_SUFFIX, pathContains: 'beta' }],
+  },
+  handleJobFormMessaging: (msg, port, messageId) => {
+    switch (msg.status) {
+      case 'connecting handle-job-posting messenger':
+        establishConnection(msg, { port, messageId });
+        break;
+      case 'job posting is not apply-now':
+        deleteHrefAndGoToNext();
+        break;
+      case 'completed handle-job-posting':
+        //content-script has scanned all applications; we can move on
+        break;
+      case 'connection received, handling job posting':
+        console.log(msg.status);
+        break;
+      case 'redirecting to form':
+        console.log(msg.data);
+      case 'waiting for message':
+        console.log('script did not receive background message');
+      case 'debug':
+        console.log(msg.debug);
+      default:
+        console.log('waiting for message', msg);
+    }
+  },
+};
 /*****************************************
  *
  * MESSAGING

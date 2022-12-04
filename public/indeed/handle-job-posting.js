@@ -1,6 +1,9 @@
 (async () => {
   if (document.readyState === 'complete') {
     const handleApplyNow = async () => {
+      let appInfo = {};
+      const STORAGE_KEY = 'indeed';
+      const COMPLETED = 'completed job-posting scan';
       // application button text variations
       const APPLY = {
         NOW: 'Apply now',
@@ -39,12 +42,44 @@
         resume: 'resume',
       };
       const PREFIX = 'data-indeed-apply-';
+      // Event types
+      const MOUSE = {
+        OVER: 'mouseover',
+        DOWN: 'mousedown',
+        UP: 'mouseup',
+        CLICK: 'click',
+      };
+
+      const HTML_ELEMENT = {
+        BUTTON: 'button',
+      };
+
+      const triggerMouseEvent = (node, eventType) => {
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initEvent(eventType, true, true);
+        node.dispatchEvent(clickEvent);
+      };
+
+      const simulateApplyNow = (applyNowButton) => {
+        triggerMouseEvent(applyNowButton, MOUSE.OVER);
+        triggerMouseEvent(applyNowButton, MOUSE.DOWN);
+        triggerMouseEvent(applyNowButton, MOUSE.UP);
+        triggerMouseEvent(applyNowButton, MOUSE.CLICK);
+      };
 
       const handleApplyNowNotFound = (elem) => {
+        port.postMessage({
+          status: 'debug',
+          debug: 'handleApplyNowNotFoundBeforeCondition',
+        });
         if (!elem || elem.textContent !== APPLY.NOW) {
+          port.postMessage({
+            status: 'debug',
+            debug: 'Job posting is not apply-now',
+          });
           throw new Error('Job posting is not apply-now');
         }
-
+        port.postMessage({ status: 'debug', debug: 'returning html elem' });
         return elem;
       };
       const getAllStorageLocalData = (key) => {
@@ -82,13 +117,33 @@
         );
       };
 
+      const sendScanCompleteMessage = async () => {
+        /*const user = appInfo?.indeed?.user;
+        user.jobPostingInProgress = false;
+        user.currentAppInfo = appInfo;
+
+        await setStorageLocalData(STORAGE_KEY, {
+          applicationName: STORAGE_KEY,
+          user: { ...user },
+        });*/
+      };
+
+      const goto = async (elem, port) => {
+        //await sendScanCompleteMessage();
+        try {
+          simulateApplyNow(elem);
+        } catch (e) {
+          //chrome doesn't like the form click
+        }
+      };
+
       /**
        * Retrieves information about our current job application from webpage
        *
        * @param {string} currentUrl : an href string of the current job application.
        * @returns {object} currentAppInfo : an object containing all information about the job application
        */
-      const getAppInfo = (currentUrl) => {
+      const getAppInfo = () => {
         const applyWidget = document
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_BUTTON)
           ?.querySelector(INDEED_QUERY_SELECTOR.APPLY_WIDGET);
@@ -109,8 +164,6 @@
           }
         }
 
-        currentAppInfo[HREF] = currentUrl;
-        console.log('currentAppInfo', JSON.stringify(currentAppInfo));
         return currentAppInfo;
       };
 
@@ -120,13 +173,11 @@
         try {
           let applyNowButton;
           try {
+            const appInfo = getAppInfo();
             applyNowButton = getApplyButton(port);
-            applyNowButton.click();
+            await goto(applyNowButton, port);
           } catch (e) {
             //this is not an apply now job posting
-            const status = 'job posting is not apply-now';
-            const url = window.location.href;
-            port.postMessage({ status, url });
           }
         } catch (e) {
           // Make an explicit copy of the Error properties
@@ -144,8 +195,6 @@
 
       const handleJobPosting = async (port, messageId) => {
         // Asynchronously retrieve data from storage.sync, then cache it.
-        let appInfo = {};
-
         try {
           appInfo = {
             ...(await getAllStorageLocalData('indeed').then((items) => items)),
@@ -161,6 +210,7 @@
           // Handle error that occurred during storage initialization.
           console.log('could not retrieve application information');
           console.log(e);
+          port.postMessage({ status: 'debug', debug: e });
         }
 
         const user = appInfo?.indeed?.user;
