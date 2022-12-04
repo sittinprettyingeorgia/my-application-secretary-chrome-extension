@@ -58,10 +58,20 @@
        * Retrieve an element using a query selector
        *
        * @param {string} selector
-       * @returns {HTMLElement[]}
+       * @returns {HTMLElement}
        */
       const retrieveElem = (selector) => {
         return document.querySelector(selector);
+      };
+      /**
+       * Retrieve an list of elements using a query selector
+       *
+       * @param {string} selector
+       * @returns {HTMLElement[]}
+       */
+      const retrieveElems = (selector) => {
+        return document.querySelectorAll(selector);
+        //return document.querySelector(selector);
       };
 
       // Event types
@@ -125,8 +135,8 @@
         RACE1: 'Race/Ethnicity',
         RACE2: 'Race or Ethnicity',
         RIGHT_TO_WORK: 'Do you have the right to work in the US',
-        SELECTOR1: 'ia-BasePage-component',
-        SELECTOR2: 'ia-BasePage-component--withContinue',
+        SELECTOR1: '.ia-BasePage-component',
+        SELECTOR2: '.ia-BasePage-component--withContinue',
         SPONSORSHIP: 'sponsorship', //no
         STATE_REGION: 'State or Region',
         STATE: 'State',
@@ -140,6 +150,7 @@
         VACCINATED: 'vaccinated',
         VETERAN: 'Veteran status',
         WORK_AUTH: 'Work Authorization',
+        QUESTION_ITEM: 'ia-Questions-item',
         YEARS_EXP: 'How many years', // can be multiple questions about experience ie. how many years of java
         ZIP_CODE: 'Zip Code',
         ZIP_POST_CODE: 'Zip/Postal Code',
@@ -186,13 +197,48 @@
         ZIP_POST_CODE: '93614',
       };
 
+      const getQuestions = (resource) => {
+        const questions = resource.getElementsByClassName(
+          QUESTIONS.QUESTION_ITEM
+        );
+
+        for (const question of questions) {
+          port.postMessage({ status: 'debug', debug: question.textContent });
+          const elems = question.getElementsByTagName('input');
+          // if user has answer to this question we user that
+          // if no answer  we search for keyword associationi ie. SMS = No
+
+          for (const elem of elems) {
+            const label = document.querySelector(
+              "label[for='" + elem.id + "']"
+            );
+          }
+        }
+      };
+
       const handleQuestions = (questions) => {
         const submitButton = retrieveElem(SUBMIT.BUTTON);
         const questions1 = retrieveElem(QUESTIONS.SELECTOR1);
         const questions2 = retrieveElem(QUESTIONS.SELECTOR2);
         //elem.textContent
         if (questions1 !== null) {
-          //We need to loop through each question in questions
+          //questions1 text content where we find the question
+          //port.postMessage({ status: 'debug', debug: questions1.textContent });
+          const text = questions1.textContent;
+          const questions = questions1.getElementsByClassName(
+            'ia-Questions-item'
+          );
+
+          for (const question of questions) {
+            port.postMessage({ status: 'debug', debug: question.textContent });
+            const elems = question.getElementsByTagName('input');
+
+            for (const elem of elems) {
+              const label = document.querySelector(
+                "label[for='" + elem.id + "']"
+              );
+            }
+          }
         }
       };
 
@@ -201,9 +247,8 @@
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
 
         try {
-          console.log('about to handle questions');
           handleQuestions(QUESTIONS);
-        } catch (e) {
+        } catch (x) {
           if (x.message === 'error running form script') {
             port.postMessage({ status: 'error running form script' });
           }
@@ -249,7 +294,6 @@
           status: 'connection received, handling job form',
         });
 
-        console.log('inside form');
         await setup(port, msg.messageId, msg.appInfo);
       };
 
