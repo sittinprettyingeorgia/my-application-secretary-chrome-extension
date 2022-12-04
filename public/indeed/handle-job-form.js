@@ -205,16 +205,27 @@
         );
 
         for (const questionElem of questionElems) {
-          let question = { text: questionElem.textContent };
-          const elems = questionElem.getElementsByTagName('input');
-          for (let i = 0; i < elems.length; i++) {
+          const elems = questionElem?.getElementsByTagName('input');
+          const legend = questionElem?.getElementsByTagName('legend')[0];
+          const text = legend && legend?.textContent;
+          let question = { text };
+          port.postMessage({
+            status: 'debug',
+            debug: 'legend text =' + text,
+          });
+
+          for (let i = 0; i < elems?.length; i++) {
             const label = document.querySelector(
               "label[for='" + elems[i].id + "']"
             );
 
             question[`label${i}`] = label;
           }
+
+          questions.push(question);
         }
+
+        return questions;
       };
 
       const handleQuestions = (questions) => {
@@ -223,25 +234,7 @@
         const questions2 = retrieveElem(QUESTIONS.SELECTOR2);
         //elem.textContent
         if (questions1 !== null) {
-          //questions1 text content where we find the question
-          //port.postMessage({ status: 'debug', debug: questions1.textContent });
-          const text = questions1.textContent;
-          const questions = questions1.getElementsByClassName(
-            'ia-Questions-item'
-          );
-
-          for (const question of questions) {
-            //port.postMessage({ status: 'debug', debug: question.textContent });
-
-            const elems = question.getElementsByTagName('input');
-            const legend = question.getElementsByTagName('legend')[0];
-            port.postMessage({ status: 'debug', debug: legend.textContent });
-            for (const elem of elems) {
-              const label = document.querySelector(
-                "label[for='" + elem.id + "']"
-              );
-            }
-          }
+          const questions = getQuestions(questions1);
         }
       };
 
