@@ -105,7 +105,6 @@
           asyncFuncID: `${messageId}`,
           jobLinks,
           error: {},
-          url: '',
         };
         const { jobLinksLimit } = jobPreferences;
         const newJobLinks = constructMap(jobLinks);

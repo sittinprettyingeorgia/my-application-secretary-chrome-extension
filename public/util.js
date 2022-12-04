@@ -3,6 +3,11 @@
  * CONSTANTS
  ******************************************/
 const INDEED_BASE = 'https://www.indeed.com';
+const INDEED = 'indeed';
+const GET_LINKS = 'get-links';
+const GET_LINKS_PATH = './indeed/get-links.js';
+const HANDLE_JOB_POSTING = 'handle-job-posting';
+const HANDLE_JOB_POSTING_PATH = './indeed/handle-job-posting.js';
 export const INDEED_SUFFIX = 'indeed.com';
 /*****************************************
  *
@@ -87,7 +92,7 @@ export const REGEX = {
 export const handleTabChange = async () => {
   //TODO: all local storage calls should be replace by our rest api
   const appInfo = {
-    ...(await getAllStorageLocalData('indeed').then((items) => items)),
+    ...(await getAllStorageLocalData(INDEED).then((items) => items)),
   };
 
   let tab = await getCurrentTab();
@@ -101,9 +106,9 @@ export const handleTabChange = async () => {
       appInfo?.indeed?.user?.applyNowInProgress;
 
     if (getLinks) {
-      handleNavigation('get-links', tab.id);
+      handleNavigation(GET_LINKS, tab.id);
     } else if (handleJobPosting) {
-      handleNavigation('handle-job-posting', tab.id);
+      handleNavigation(HANDLE_JOB_POSTING, tab.id);
     }
   }
 };
@@ -112,22 +117,22 @@ export const handleNavigation = (action, tabId) => {
   const navigateToJobLinksScript = async () => {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ['./indeed/get-links.js'],
+      files: [GET_LINKS_PATH],
     });
   };
 
   const navigateToApplyNowScript = async () => {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ['./indeed/handle-job-posting.js'],
+      files: [HANDLE_JOB_POSTING_PATH],
     });
   };
 
   switch (action) {
-    case 'get-links':
+    case GET_LINKS:
       navigateToJobLinksScript();
       break;
-    case 'handle-job-posting':
+    case HANDLE_JOB_POSTING:
       navigateToApplyNowScript();
   }
 };
