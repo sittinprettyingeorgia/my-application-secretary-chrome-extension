@@ -69,7 +69,7 @@
 
       const handleApplyNowNotFound = (elem) => {
         if (!elem || elem.textContent !== APPLY.NOW) {
-          throw new Error('Job posting is not apply-now');
+          throw new Error('job posting is not valid');
         }
 
         return elem;
@@ -169,11 +169,11 @@
 
           appInfo = getAppInfo();
           applyNowButton = getApplyButton();
-          port.postMessage({ status: 'app-info', data: appInfo });
+          port.postMessage({ status: 'current app-info', data: appInfo });
           await goto(applyNowButton, port);
         } catch (x) {
-          if (x.message === 'Job posting is not apply-now') {
-            port.postMessage({ status: 'job posting is not apply-now' });
+          if (x.message === 'job posting is not valid') {
+            port.postMessage({ status: 'job posting is not valid' });
           }
           // Make an explicit copy of the Error properties
           result.error = {

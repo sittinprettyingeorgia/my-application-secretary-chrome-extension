@@ -228,22 +228,29 @@
         return questions;
       };
 
-      const handleQuestions = (questions) => {
+      /*const handleQuestions = (jobPreferences) => {
         const submitButton = retrieveElem(SUBMIT.BUTTON);
         const questions1 = retrieveElem(QUESTIONS.SELECTOR1);
         const questions2 = retrieveElem(QUESTIONS.SELECTOR2);
+
         //elem.textContent
         if (questions1 !== null) {
           const questions = getQuestions(questions1);
+          for (const question of questions) {
+          }
         }
-      };
+      };*/
+
+      const handleQuestions = (jobPreferences) => {};
 
       const handleFormInteraction = async (user, port, messageId) => {
-        let { jobLinks = [] } = user ?? {};
+        let { jobLinks = [], jobPreferences = {}, currentQuestions = {} } =
+          user ?? {};
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
+        port.postMessage({ status: 'debug', debug: currentQuestions });
 
         try {
-          handleQuestions(QUESTIONS);
+          handleQuestions(jobPreferences, currentQuestions);
         } catch (x) {
           if (x.message === 'error running form script') {
             port.postMessage({ status: 'error running form script' });
@@ -264,6 +271,7 @@
       const setup = async (port, messageId, appInfo) => {
         const user = appInfo?.indeed?.user;
         port.postMessage({ status: 'debug', debug: appInfo }); //TODO: we can retrieve appInfo
+        // TODO: appInfo should be verified against preferences before visiting the form page.
         //TODO: now we need to upgrade our user object for all of the form information.
         await handleFormInteraction(user, port, messageId);
 

@@ -6,6 +6,7 @@ import {
   handleTabChange,
   handleMessaging,
 } from './util.js';
+
 /********************************************************************************************
  *
  * SERVICE WORKER CONSTANTS

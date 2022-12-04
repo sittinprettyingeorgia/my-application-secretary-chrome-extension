@@ -10,6 +10,7 @@ const HANDLE_JOB_POSTING = 'handle-job-posting';
 const HANDLE_JOB_POSTING_PATH = './indeed/handle-job-posting.js';
 const HANDLE_JOB_FORM = 'handle-job-form';
 const HANDLE_JOB_FORM_PATH = './indeed/handle-job-form.js';
+const STORAGE_KEY = 'indeed';
 export const INDEED_SUFFIX = 'indeed.com';
 /*****************************************
  *
@@ -65,6 +66,28 @@ export const setStorageLocalData = async (key, val) => {
  *
  * HELPER
  ******************************************/
+const getAxiosError = (e) => {
+  let message = '';
+  let err;
+
+  if (e.response) {
+    message =
+      'The request was made and the server responded with a status code that falls out of the range of 2xx';
+    err = { message, ...e.response, json: e.toJSON.toString() };
+  } else if (e.request) {
+    message =
+      'The request was made but no response was received `e.request` is an instance of XMLHttpRequest' +
+      ' in the browser and an instance of http.ClientRequest in node.js';
+    err = { message, ...e.request, json: e.toJSON.toString() };
+  } else {
+    message =
+      'Something happened in setting up the request that triggered an error';
+    err = { message, json: e.toJSON.toString() };
+  }
+
+  return err;
+};
+
 const getAppInfo = async () => {
   const appInfo = {
     ...(await getAllStorageLocalData(INDEED).then((items) => items)),
@@ -87,6 +110,25 @@ const getTabAndAppInfo = async () => {
   const appInfo = await getAppInfo();
   const tab = await getCurrentTab();
   return [appInfo, tab];
+};
+const updateAppInfo = async (newAppInfo) => {
+  const appInfo = await getAppInfo();
+  appInfo.indeed.user.currentAppInfo = { ...newAppInfo };
+  let questions;
+
+  try {
+    const response = await fetch(newAppInfo.questions);
+    questions = await response.json();
+  } catch (e) {
+    console.log(e);
+  }
+
+  appInfo.indeed.user.currentQuestions = questions;
+
+  await setStorageLocalData(STORAGE_KEY, {
+    applicationName: STORAGE_KEY,
+    user: { ...appInfo.indeed.user },
+  });
 };
 /**
  * Remove a link from our users jobLinks
@@ -324,13 +366,14 @@ export const JOB_POSTING_WORKER = {
       case 'connecting handle-job-posting messenger':
         establishConnection(msg, { port, messageId });
         break;
-      case 'job posting is not apply-now': //TODO: we cannot get messages from content script apply-now
+      case 'job posting is not valid': //TODO: we cannot get messages from content script apply-now
         deleteHrefAndGoToNext();
         break;
       case 'completed handle-job-posting':
         //content-script has scanned all applications; we can move on
         break;
-      case 'app-info':
+      case 'current app-info':
+        updateAppInfo(msg.data);
         break;
       case 'connection received, handling job posting':
         break;
