@@ -19,15 +19,6 @@
       };
       const COMPLETED = 'completed job-links scan';
       const COMPLETED_PAGE = 'completed page scan';
-      const constructMap = (arr) => {
-        let map = {};
-
-        for (const item of arr) {
-          map[item] = item;
-        }
-
-        return map;
-      };
 
       const getAllStorageLocalData = (key) => {
         return new Promise((resolve, reject) => {
@@ -45,9 +36,7 @@
           return;
         }
 
-        chrome.storage.local.set({ [key]: val }, () => {
-          console.log('Value is set to ' + JSON.stringify(val));
-        });
+        chrome.storage.local.set({ [key]: val }, () => {});
       };
       /**
        * Retrieve an list of elements using a query selector
@@ -79,6 +68,8 @@
       ) => {
         user.jobLinkCollectionInProgress = jobLinkCollectionInProgress;
         user.jobPostingInProgress = true;
+        const uniqueJobLinks = [...new Set(user.jobLinks)];
+        user.jobLinks = [...uniqueJobLinks];
         user.jobLinks.sort();
 
         await setStorageLocalData(STORAGE_KEY, {
@@ -103,7 +94,7 @@
           error: {},
         };
         const { jobLinksLimit } = jobPreferences;
-        const newJobLinks = constructMap(jobLinks);
+        const newJobLinks = new Set(jobLinks);
 
         const gotoNextPage = (newJobLinks) => {
           const nav = document.querySelector(
@@ -118,7 +109,7 @@
             INDEED_QUERY_SELECTOR.PAGINATION_ELEM2
           );
 
-          user.jobLinks = [...user.jobLinks, ...newJobLinks];
+          user.jobLinks = [...new Set([...user.jobLinks, ...newJobLinks])];
 
           if (paginationNext !== null) {
             sendScanCompleteMessage(port, user, COMPLETED_PAGE, true);
@@ -136,11 +127,11 @@
               const href = link.getAttribute('href');
 
               if (href) {
-                newJobLinks[href] = href;
+                newJobLinks.add(href);
               }
             }
 
-            gotoNextPage(Object.keys(newJobLinks));
+            gotoNextPage(newJobLinks);
           } catch (e) {
             console.log('script failed', e);
             throw new Error('script failed');
@@ -148,10 +139,7 @@
         };
 
         try {
-          if (
-            !newJobLinks ||
-            Object.keys(newJobLinks)?.length < jobLinksLimit
-          ) {
+          if (!newJobLinks || newJobLinks?.size < jobLinksLimit) {
             await getPageJobLinks(port);
           } else {
             await sendScanCompleteMessage(port, user, COMPLETED, false);

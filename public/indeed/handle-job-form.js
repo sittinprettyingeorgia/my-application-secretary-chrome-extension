@@ -17,6 +17,7 @@
         NAV_CONTAINER: 'nav[role=navigation',
         PAGINATION_ELEM1: 'a[data-testid=pagination-page-next]',
         PAGINATION_ELEM2: 'a[aria-label=Next]',
+        INPUT: 'input',
       };
       // alert that a field is required
       const REQUIRED = {
@@ -198,20 +199,20 @@
       };
 
       const getQuestions = (resource) => {
-        const questions = resource.getElementsByClassName(
+        const questions = [];
+        const questionElems = resource.getElementsByClassName(
           QUESTIONS.QUESTION_ITEM
         );
 
-        for (const question of questions) {
-          port.postMessage({ status: 'debug', debug: question.textContent });
-          const elems = question.getElementsByTagName('input');
-          // if user has answer to this question we user that
-          // if no answer  we search for keyword associationi ie. SMS = No
-
-          for (const elem of elems) {
+        for (const questionElem of questionElems) {
+          let question = { text: questionElem.textContent };
+          const elems = questionElem.getElementsByTagName('input');
+          for (let i = 0; i < elems.length; i++) {
             const label = document.querySelector(
-              "label[for='" + elem.id + "']"
+              "label[for='" + elems[i].id + "']"
             );
+
+            question[`label${i}`] = label;
           }
         }
       };
@@ -230,9 +231,11 @@
           );
 
           for (const question of questions) {
-            port.postMessage({ status: 'debug', debug: question.textContent });
-            const elems = question.getElementsByTagName('input');
+            //port.postMessage({ status: 'debug', debug: question.textContent });
 
+            const elems = question.getElementsByTagName('input');
+            const legend = question.getElementsByTagName('legend')[0];
+            port.postMessage({ status: 'debug', debug: legend.textContent });
             for (const elem of elems) {
               const label = document.querySelector(
                 "label[for='" + elem.id + "']"
