@@ -178,7 +178,7 @@
       /**
        * Collect all available job application links.
        */
-      const handleJobLinksRetrieval = async (port, messageId) => {
+      const setup = async (port, messageId) => {
         // Asynchronously retrieve data from storage.sync, then cache it.
         let appInfo = {};
 
@@ -214,7 +214,7 @@
           status: 'connection received, starting job scan',
         });
 
-        await handleJobLinksRetrieval(port, msg.messageId);
+        await setup(port, msg.messageId);
       };
       console.log('inside get-links');
 

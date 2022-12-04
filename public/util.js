@@ -93,7 +93,6 @@ const getTabAndAppInfo = async () => {
  * @param {key:href, val:href} links
  */
 export const deleteHrefAndGoToNext = async () => {
-  console.log('we should be redirecting to next job link1');
   try {
     const [appInfo, _tab] = await getTabAndAppInfo();
 
@@ -116,8 +115,6 @@ export const deleteHrefAndGoToNext = async () => {
     });
 
     let url = INDEED_BASE + jobLinks.pop();
-    console.log('we should be redirecting to next job link2');
-
     await chrome.tabs.create({ url });
   } catch (e) {
     // Handle error that occurred during storage initialization.
@@ -222,7 +219,6 @@ export const handleNavigation = (action, tabId) => {
   };
 
   const navigateToFormScript = async () => {
-    console.log('we are about to navigate to our form script.');
     await chrome.scripting.executeScript({
       target: { tabId },
       files: [HANDLE_JOB_FORM_PATH],
@@ -236,7 +232,7 @@ export const handleNavigation = (action, tabId) => {
     case HANDLE_JOB_POSTING:
       navigateToApplyNowScript();
       break;
-    case HANDLE_JOB_FORM_PATH:
+    case HANDLE_JOB_FORM:
       navigateToFormScript();
       break;
   }
@@ -286,10 +282,7 @@ export const JOB_LINKS_WORKER = {
         break;
       case 'waiting for message':
         break;
-      case 'There was an error collecting job links':
-        break;
       default:
-        console.log('waiting for actionable message...', msg);
     }
   },
 };
@@ -318,7 +311,6 @@ export const JOB_POSTING_WORKER = {
       // we need to remove this link after handleApplicationForm is successful.
       // or if the job is not an apply-now job
       let url = jobLinks.at(-1);
-
       await chrome.tabs.create({ url });
     } catch (e) {
       console.log(e);
@@ -338,17 +330,13 @@ export const JOB_POSTING_WORKER = {
       case 'completed handle-job-posting':
         //content-script has scanned all applications; we can move on
         break;
-      case 'connection received, handling job posting':
-        console.log(msg.status);
+      case 'app-info':
         break;
-      case 'redirecting to form':
-        console.log(msg.data);
+      case 'connection received, handling job posting':
+        break;
       case 'waiting for message':
-        console.log('script did not receive background message');
-      case 'debug':
-        console.log(msg.debug);
+        break;
       default:
-        console.log('waiting for message', msg);
     }
   },
 };
@@ -356,7 +344,7 @@ export const JOB_POSTING_WORKER = {
 export const JOB_FORM_WORKER = {
   main: async (tab) => {
     try {
-      const appInfo = getAppInfo();
+      const [appInfo, _tab] = await getTabAndAppInfo();
       console.log('I am running script inside of indeed form HOE!');
     } catch (e) {
       console.log(e);
@@ -365,28 +353,23 @@ export const JOB_FORM_WORKER = {
   filter: {
     url: [{ hostSuffix: INDEED_SUFFIX, pathContains: 'beta' }],
   },
-  handleJobFormMessaging: (msg, port, messageId) => {
+  handleJobFormMessaging: async (msg, port, messageId) => {
+    const appInfo = await getAppInfo();
+
     switch (msg.status) {
-      case 'connecting handle-job-posting messenger':
-        establishConnection(msg, { port, messageId });
+      case 'connecting handle-job-form messenger':
+        establishConnection(msg, { port, messageId, appInfo });
         break;
-      case 'job posting is not apply-now':
-        deleteHrefAndGoToNext();
+      case 'completed handle-job-form':
+        //content-script has completed job form
         break;
-      case 'completed handle-job-posting':
-        //content-script has scanned all applications; we can move on
-        break;
-      case 'connection received, handling job posting':
+      case 'connection received, handling job form':
         console.log(msg.status);
         break;
-      case 'redirecting to form':
-        console.log(msg.data);
       case 'waiting for message':
         console.log('script did not receive background message');
-      case 'debug':
-        console.log(msg.debug);
       default:
-        console.log('waiting for message', msg);
+        console.log(msg.debug);
     }
   },
 };
@@ -409,6 +392,9 @@ export const handleMessaging = (port) => {
         break;
       case 'handle-job-posting':
         JOB_POSTING_WORKER.handleJobPostingMessaging(msg, port, messageId);
+        break;
+      case 'handle-job-form':
+        JOB_FORM_WORKER.handleJobFormMessaging(msg, port, messageId);
         break;
       default:
         console.log('waiting for message', msg);

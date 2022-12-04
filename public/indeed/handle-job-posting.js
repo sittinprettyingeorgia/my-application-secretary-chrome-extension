@@ -159,17 +159,17 @@
         return currentAppInfo;
       };
 
-      const validateApplyNow = async (user, port, messageId) => {
+      const handleJobPosting = async (user, port, messageId) => {
         let { jobLinks = [] } = user ?? {};
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
 
         try {
           let applyNowButton;
-          let foundApplyNow = false;
           let appInfo = {};
 
           appInfo = getAppInfo();
           applyNowButton = getApplyButton();
+          port.postMessage({ status: 'app-info', data: appInfo });
           await goto(applyNowButton, port);
         } catch (x) {
           if (x.message === 'Job posting is not apply-now') {
@@ -183,12 +183,14 @@
             name: x.name,
             stack: x.stack,
           };
+
+          port.postMessage({ status: 'debug', debug: result });
         }
 
         return result;
       };
 
-      const handleJobPosting = async (port, messageId) => {
+      const setup = async (port, messageId) => {
         // Asynchronously retrieve data from storage.sync, then cache it.
         try {
           appInfo = {
@@ -207,7 +209,7 @@
         }
 
         const user = appInfo?.indeed?.user;
-        await validateApplyNow(user, port, messageId);
+        await handleJobPosting(user, port, messageId);
       };
 
       /*********************************
@@ -223,7 +225,7 @@
           status: 'connection received, handling job posting',
         });
 
-        await handleJobPosting(port, msg.messageId);
+        await setup(port, msg.messageId);
       };
 
       let port = chrome.runtime.connect({ name: 'handle-job-posting' });
