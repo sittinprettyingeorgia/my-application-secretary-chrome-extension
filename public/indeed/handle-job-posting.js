@@ -68,18 +68,10 @@
       };
 
       const handleApplyNowNotFound = (elem) => {
-        port.postMessage({
-          status: 'debug',
-          debug: 'handleApplyNowNotFoundBeforeCondition',
-        });
         if (!elem || elem.textContent !== APPLY.NOW) {
-          port.postMessage({
-            status: 'debug',
-            debug: 'Job posting is not apply-now',
-          });
           throw new Error('Job posting is not apply-now');
         }
-        port.postMessage({ status: 'debug', debug: 'returning html elem' });
+
         return elem;
       };
       const getAllStorageLocalData = (key) => {
@@ -170,16 +162,19 @@
       const validateApplyNow = async (user, port, messageId) => {
         let { jobLinks = [] } = user ?? {};
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
+
         try {
           let applyNowButton;
-          try {
-            const appInfo = getAppInfo();
-            applyNowButton = getApplyButton(port);
-            await goto(applyNowButton, port);
-          } catch (e) {
-            //this is not an apply now job posting
+          let foundApplyNow = false;
+          let appInfo = {};
+
+          appInfo = getAppInfo();
+          applyNowButton = getApplyButton();
+          await goto(applyNowButton, port);
+        } catch (x) {
+          if (x.message === 'Job posting is not apply-now') {
+            port.postMessage({ status: 'job posting is not apply-now' });
           }
-        } catch (e) {
           // Make an explicit copy of the Error properties
           result.error = {
             message: x.message,
@@ -208,9 +203,7 @@
           }
         } catch (e) {
           // Handle error that occurred during storage initialization.
-          console.log('could not retrieve application information');
           console.log(e);
-          port.postMessage({ status: 'debug', debug: e });
         }
 
         const user = appInfo?.indeed?.user;

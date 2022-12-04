@@ -93,6 +93,7 @@ const getTabAndAppInfo = async () => {
  * @param {key:href, val:href} links
  */
 export const deleteHrefAndGoToNext = async () => {
+  console.log('we should be redirecting to next job link1');
   try {
     const [appInfo, _tab] = await getTabAndAppInfo();
 
@@ -114,7 +115,9 @@ export const deleteHrefAndGoToNext = async () => {
       user,
     });
 
-    let url = jobLinks.pop();
+    let url = INDEED_BASE + jobLinks.pop();
+    console.log('we should be redirecting to next job link2');
+
     await chrome.tabs.create({ url });
   } catch (e) {
     // Handle error that occurred during storage initialization.
