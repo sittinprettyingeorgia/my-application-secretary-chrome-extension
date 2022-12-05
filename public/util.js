@@ -123,7 +123,7 @@ const updateAppInfo = async (newAppInfo) => {
     console.log(e);
   }
 
-  appInfo.indeed.user.currentQuestions = questions;
+  appInfo.indeed.user.currentQuestions = { ...questions };
 
   await setStorageLocalData(STORAGE_KEY, {
     applicationName: STORAGE_KEY,

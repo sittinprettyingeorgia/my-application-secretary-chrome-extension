@@ -112,8 +112,12 @@
       };
       const QUESTIONS = {
         ADDRESS: 'Address',
+        AGE: 'at least 18 years of age',
         AGREE: 'agree',
+        AVAILABILITY_MEET: 'When are you available',
+        BEEN_EMPLOYED: 'Have you ever applied for employment at',
         BEEN_EMPLOYED: 'Have you ever been employed by', // we need to add company name here.
+        CITIZEN: 'What is your citizenship',
         CITY: 'City',
         CLEARANCE: 'active security clearance',
         COMMUTE: 'commute',
@@ -124,23 +128,36 @@
         DESCRIBE_EXP: 'describe your experience',
         DESIRED_PAY: 'Desired Pay',
         DISABILITY: 'Disability status',
+        DOD_EXP: 'Do you have DoD experience',
+        EDUCATION: 'Highest Education Level',
         EDUCATION: 'What is the highest level of education',
         EST_TIME_ZONE: 'Are you currently located',
+        EXP: 'Years of experience',
         GENDER: 'Gender',
         LANGUAGE: 'Do you speak Fluent English',
+        MILITARY_STATUS: 'Present military status',
+        MILITARY: 'been a member of U.S. Armed Services?',
         NA: 'N/A',
         NAME: 'Your Name',
         OPTIONAL: 'optional', // we should skip all optional fields
         POSTAL_CODE: 'Postal Code',
         POSTAL_ZIP: 'Postal/ZIP',
+        QUESTION_ITEM: 'ia-Questions-item',
         RACE1: 'Race/Ethnicity',
         RACE2: 'Race or Ethnicity',
+        RELATIVES: 'Do you have relatives who work',
+        RELOCATION: 'Are you willing to relocate',
         RIGHT_TO_WORK: 'Do you have the right to work in the US',
+        SALARY_RQ: 'Salary requirements',
+        SECURITY_DENY: 'Have you ever been denied a Security Clearance',
         SELECTOR1: '.ia-BasePage-component',
         SELECTOR2: '.ia-BasePage-component--withContinue',
+        SEX_GENDER: 'Sex/Gender',
+        SMS: 'SMS text',
         SPONSORSHIP: 'sponsorship', //no
         STATE_REGION: 'State or Region',
         STATE: 'State',
+        TERMS: 'By applying to this position, I agree to',
         TODAYS_DATE: "Today's Date",
         UNKNOWN: '', //if unknown select first option
         US_AUTH: 'Are you authorized to work in the United States', // search for yes
@@ -151,7 +168,6 @@
         VACCINATED: 'vaccinated',
         VETERAN: 'Veteran status',
         WORK_AUTH: 'Work Authorization',
-        QUESTION_ITEM: 'ia-Questions-item',
         YEARS_EXP: 'How many years', // can be multiple questions about experience ie. how many years of java
         ZIP_CODE: 'Zip Code',
         ZIP_POST_CODE: 'Zip/Postal Code',
@@ -228,7 +244,7 @@
         return questions;
       };
 
-      /*const handleQuestions = (jobPreferences) => {
+      const handleQuestionsWithoutCall = (jobPreferences) => {
         const submitButton = retrieveElem(SUBMIT.BUTTON);
         const questions1 = retrieveElem(QUESTIONS.SELECTOR1);
         const questions2 = retrieveElem(QUESTIONS.SELECTOR2);
@@ -239,18 +255,26 @@
           for (const question of questions) {
           }
         }
-      };*/
+      };
 
-      const handleQuestions = (jobPreferences) => {};
+      const handleQuestions = (jobPreferences, questions) => {
+        //each question is a json object
+        // EX. {id: '1208817', options: Array(2),
+        // question: '<br/>Do you have DoD experience?', required: 'true', type: 'select'}
+        for (const question of questions) {
+        }
+      };
 
       const handleFormInteraction = async (user, port, messageId) => {
         let { jobLinks = [], jobPreferences = {}, currentQuestions = {} } =
           user ?? {};
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
-        port.postMessage({ status: 'debug', debug: currentQuestions });
+        const questionsArr = [...Object.values(currentQuestions)];
 
+        const requiredQuestions = questionsArr.filter((q) => q?.required);
+        port.postMessage({ status: 'debug', debug: requiredQuestions });
         try {
-          handleQuestions(jobPreferences, currentQuestions);
+          handleQuestions(jobPreferences, requiredQuestions);
         } catch (x) {
           if (x.message === 'error running form script') {
             port.postMessage({ status: 'error running form script' });
