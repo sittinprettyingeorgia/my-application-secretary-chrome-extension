@@ -261,6 +261,7 @@
         //each question is a json object
         // EX. {id: '1208817', options: Array(2),
         // question: '<br/>Do you have DoD experience?', required: 'true', type: 'select'}
+        // we should send the questions url from appInfo to our backend.
         for (const question of questions) {
         }
       };
