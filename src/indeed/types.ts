@@ -79,7 +79,6 @@ export type User = Partial<{
   jobLinkCollectionInProgress: boolean;
   jobPostingInProgress: boolean;
   currentAppInfo: any;
-  currentQuestions: any;
 }>;
 
 // TODO:
