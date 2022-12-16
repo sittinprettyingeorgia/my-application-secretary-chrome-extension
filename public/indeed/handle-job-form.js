@@ -267,15 +267,18 @@
       };
 
       const handleFormInteraction = async (user, port, messageId) => {
-        let { jobLinks = [], jobPreferences = {}, currentAppInfo = {} } =
-          user ?? {};
+        let {
+          jobLinks = [],
+          jobPreferences = {},
+          currentAppInfo = {},
+        } = user ?? {};
 
         const { questions: questionsLink } = currentAppInfo;
         const questionResponse = await fetch(`${questionsLink}`);
         const questions = response.json();
         const requiredQuestions = questions.filter((q) => q?.required);
         const answerResponse = await fetch(
-          `http://localhost:3540/answers/${userId}`
+          `http://localhost:3540/users/${userId}/answers`
         );
         const answers = answerResponse.json();
         const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
