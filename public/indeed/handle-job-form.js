@@ -274,7 +274,7 @@
         } = user ?? {};
 
         const { questions: questionsLink } = currentAppInfo;
-        const questionResponse = await fetch(`${questionsLink}`);
+        const questionResponse = await fetch(`${questionsLink}`); // TODO: questions link is blocked by CORS
         const questions = response.json();
         const requiredQuestions = questions.filter((q) => q?.required);
         const answerResponse = await fetch(
