@@ -1,12 +1,11 @@
 /*global chrome*/
+import { handleTabChange } from './util.js';
 import {
   JOB_LINKS_WORKER,
   JOB_POSTING_WORKER,
   JOB_FORM_WORKER,
-  handleTabChange,
   handleMessaging,
-} from './util.js';
-
+} from './worker.js';
 /********************************************************************************************
  *
  * SERVICE WORKER CONSTANTS

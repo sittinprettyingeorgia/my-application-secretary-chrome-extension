@@ -9,15 +9,17 @@
       };
 
       const INDEED_QUERY_SELECTOR = {
-        APPLY_BUTTON: '.ia-IndeedApplyButton',
         APPLY_BUTTON_ID: '#indeedApplyButton',
         APPLY_BUTTON_WRAPPER: '.jobsearch-IndeedApplyButton-buttonWrapper',
+        APPLY_BUTTON: '.ia-IndeedApplyButton',
         APPLY_WIDGET: '.indeed-apply-widget',
+        CONTINUE_BUTTON: '.ia-continueButton',
+        INPUT: 'input',
         JOB_LINKS: '.jobTitle a',
         NAV_CONTAINER: 'nav[role=navigation',
         PAGINATION_ELEM1: 'a[data-testid=pagination-page-next]',
         PAGINATION_ELEM2: 'a[aria-label=Next]',
-        INPUT: 'input',
+        RESUME_CONTINUE: '.ia-Resume-continue',
       };
       // alert that a field is required
       const REQUIRED = {
@@ -100,6 +102,22 @@
         triggerMouseEvent(applyNowButton, MOUSE.CLICK);
       };
 
+      const gotoNextPage = () => {
+        const continueBttn = document.querySelector(
+          INDEED_QUERY_SELECTOR.CONTINUE_BUTTON
+        );
+        const resumeBttn = document.querySelector(
+          INDEED_QUERY_SELECTOR.RESUME_CONTINUE
+        );
+
+        if (continueBttn || resumeBttn) {
+          continueBttn?.scrollIntoView() && resumeBttn?.scrollIntoView();
+          continueBttn?.click() && resumeBttn.click();
+        }
+
+        return false;
+      };
+
       //APP FORM CONSTANTS | handle-app-form.js
       const SUBMIT = {
         APPLICATION: 'Submit you application',
@@ -109,68 +127,6 @@
         RETURN_TO_SEARCH_SELECTOR: '#returnToSearchButton',
         RETURN_TO_SEARCH: 'Return to job search',
         REVIEW_APPLICATION: 'Review you application',
-      };
-      const QUESTIONS = {
-        ADDRESS: 'Address',
-        AGE: 'at least 18 years of age',
-        AGREE: 'agree',
-        AVAILABILITY_MEET: 'When are you available',
-        BEEN_EMPLOYED: 'Have you ever applied for employment at',
-        BEEN_EMPLOYED: 'Have you ever been employed by', // we need to add company name here.
-        CITIZEN: 'What is your citizenship',
-        CITY: 'City',
-        CLEARANCE: 'active security clearance',
-        COMMUTE: 'commute',
-        COMPENSATION: 'compensation',
-        COMPETE: 'non-competes',
-        COUNTRY: 'Country',
-        DATES: 'please list 2-3 dates',
-        DESCRIBE_EXP: 'describe your experience',
-        DESIRED_PAY: 'Desired Pay',
-        DISABILITY: 'Disability status',
-        DOD_EXP: 'Do you have DoD experience',
-        EDUCATION: 'Highest Education Level',
-        EDUCATION: 'What is the highest level of education',
-        EST_TIME_ZONE: 'Are you currently located',
-        EXP: 'Years of experience',
-        GENDER: 'Gender',
-        LANGUAGE: 'Do you speak Fluent English',
-        MILITARY_STATUS: 'Present military status',
-        MILITARY: 'been a member of U.S. Armed Services?',
-        NA: 'N/A',
-        NAME: 'Your Name',
-        OPTIONAL: 'optional', // we should skip all optional fields
-        POSTAL_CODE: 'Postal Code',
-        POSTAL_ZIP: 'Postal/ZIP',
-        QUESTION_ITEM: 'ia-Questions-item',
-        RACE1: 'Race/Ethnicity',
-        RACE2: 'Race or Ethnicity',
-        RELATIVES: 'Do you have relatives who work',
-        RELOCATION: 'Are you willing to relocate',
-        RIGHT_TO_WORK: 'Do you have the right to work in the US',
-        SALARY_RQ: 'Salary requirements',
-        SECURITY_DENY: 'Have you ever been denied a Security Clearance',
-        SELECTOR1: '.ia-BasePage-component',
-        SELECTOR2: '.ia-BasePage-component--withContinue',
-        SEX_GENDER: 'Sex/Gender',
-        SMS: 'SMS text',
-        SPONSORSHIP: 'sponsorship', //no
-        STATE_REGION: 'State or Region',
-        STATE: 'State',
-        TERMS: 'By applying to this position, I agree to',
-        TODAYS_DATE: "Today's Date",
-        UNKNOWN: '', //if unknown select first option
-        US_AUTH: 'Are you authorized to work in the United States', // search for yes
-        US_CITIZEN: '',
-        US_STATE_SELECTOR:
-          '#state__United States__{"DATASOURCE":"CUSTOM_QUESTIONS"}',
-        US_VALID: 'valid us citizenship',
-        VACCINATED: 'vaccinated',
-        VETERAN: 'Veteran status',
-        WORK_AUTH: 'Work Authorization',
-        YEARS_EXP: 'How many years', // can be multiple questions about experience ie. how many years of java
-        ZIP_CODE: 'Zip Code',
-        ZIP_POST_CODE: 'Zip/Postal Code',
       };
       const ANSWERS = {
         ADDRESS: '34027 CA-41',
@@ -273,36 +229,48 @@
           currentAppInfo = {},
         } = user ?? {};
 
-        const { questions: questionsLink } = currentAppInfo;
-        const questionResponse = await fetch(`${questionsLink}`); // TODO: questions link is blocked by CORS
-        const questions = response.json();
-        const requiredQuestions = questions.filter((q) => q?.required);
-        const answerResponse = await fetch(
-          `http://localhost:3540/users/${userId}/answers`
-        );
-        const answers = answerResponse.json();
-        const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
+        const gotoNext = gotoNextPage();
 
-        port.postMessage({
-          status: 'debug',
-          debug: { requiredQuestions, answers },
-        });
-        try {
-          handleQuestions(jobPreferences, requiredQuestions);
-        } catch (x) {
-          if (x.message === 'error running form script') {
-            port.postMessage({ status: 'error running form script' });
+        if (!gotoNext) {
+          const { questions: questionsLink } = currentAppInfo;
+
+          const answerResponse = await fetch(
+            `http://localhost:3540/users/${userId}/answers`,
+            {
+              method: 'POST', // *GET, POST, PUT, DELETE, etc.
+              mode: 'cors', // no-cors, *cors, same-origin
+              cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+              credentials: 'same-origin', // include, *same-origin, omit
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ questionsLink }),
+            }
+          );
+          const answers = answerResponse.json();
+          const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
+
+          port.postMessage({
+            status: 'debug',
+            debug: { requiredQuestions, answers },
+          });
+          try {
+            handleQuestions(jobPreferences, requiredQuestions);
+          } catch (x) {
+            if (x.message === 'error running form script') {
+              port.postMessage({ status: 'error running form script' });
+            }
+            // Make an explicit copy of the Error properties
+            result.error = {
+              message: x.message,
+              arguments: x.arguments,
+              type: x.type,
+              name: x.name,
+              stack: x.stack,
+            };
+
+            port.postMessage({ status: 'debug', debug: result });
           }
-          // Make an explicit copy of the Error properties
-          result.error = {
-            message: x.message,
-            arguments: x.arguments,
-            type: x.type,
-            name: x.name,
-            stack: x.stack,
-          };
-
-          port.postMessage({ status: 'debug', debug: result });
         }
       };
 
