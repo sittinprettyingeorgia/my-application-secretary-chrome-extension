@@ -118,6 +118,7 @@
         return false;
       };
 
+      //these form constants should be retrieved via fetch
       //APP FORM CONSTANTS | handle-app-form.js
       const SUBMIT = {
         APPLICATION: 'Submit you application',
@@ -168,6 +169,11 @@
         YEARS_EXP: '1',
         ZIP_CODE: '93614',
         ZIP_POST_CODE: '93614',
+      };
+      const SELECTORS = {
+        BASE_PAGE_CLASS: 'ia-BasePage-component',
+        BASE_PAGE_CLASS_WITH_CONTINUE: 'ia-BasePage-component--withContinue'
+        QUESTION_ITEM: 'ia-Questions-item'
       };
 
       const getQuestions = (resource) => {
@@ -233,29 +239,12 @@
         const gotoNext = gotoNextPage();
 
         if (!gotoNext) {
-          const { questions: questionsLink } = currentAppInfo;
+          const { answers = {} } = currentAppInfo;
 
-          const answerResponse = await fetch(
-            `http://localhost:3540/users/${userId}/answers`,
-            {
-              method: 'POST', // *GET, POST, PUT, DELETE, etc.
-              mode: 'cors', // no-cors, *cors, same-origin
-              cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ questionsLink }),
-            }
-          );
-          const answers = answerResponse.json();
           const result = { asyncFuncID: `${messageId}`, jobLinks, error: {} };
 
-          port.postMessage({
-            status: 'debug',
-            debug: { requiredQuestions, answers },
-          });
           try {
-            handleQuestions(jobPreferences, requiredQuestions);
+            handleQuestions(jobPreferences, answers);
           } catch (x) {
             if (x.message === 'error running form script') {
               port.postMessage({ status: 'error running form script' });

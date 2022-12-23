@@ -96,23 +96,36 @@ const deleteHrefAndGoToNext = async () => {
 };
 
 const updateAppInfo = async (newAppInfo) => {
-  const appInfo = await getAppInfo();
-  appInfo.indeed.user.currentAppInfo = { ...newAppInfo };
   let questions;
-
   try {
+    const appInfo = await getAppInfo();
+    appInfo.indeed.user.currentAppInfo = { ...newAppInfo };
+
     const response = await fetch(newAppInfo.questions);
-    questions = await response.json();
+    appInfo.indeed.user.currentQuestions = { ...(await response.json()) };
+    console.log(JSON.stringify(appInfo.indeed.user.currentQuestions));
   } catch (e) {
-    console.log(e);
+    // log error
   }
 
-  appInfo.indeed.user.currentQuestions = { ...questions };
+  if (questions) {
+    let answers;
+    try {
+      const answerResponse = await fetch('/1/answers', {
+        method: 'POST',
+        method: 'cors',
+        body: JSON.stringify({ questions }),
+      });
+      appInfo.indeed.user.currentAnswers = { ...(await answerResponse.json()) };
+    } catch (e) {
+      //log error
+    }
 
-  await setStorageLocalData(STORAGE_KEY, {
-    applicationName: STORAGE_KEY,
-    user: { ...appInfo.indeed.user },
-  });
+    await setStorageLocalData(STORAGE_KEY, {
+      applicationName: STORAGE_KEY,
+      user: { ...appInfo.indeed.user },
+    });
+  }
 };
 
 const getAppInfo = async () => {
