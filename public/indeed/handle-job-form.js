@@ -1,5 +1,3 @@
-import { text } from "stream/consumers";
-
 (async () => {
   if (document.readyState === "complete") {
     const handleForm = () => {

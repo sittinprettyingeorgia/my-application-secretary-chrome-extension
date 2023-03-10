@@ -60,6 +60,11 @@ const setStorageLocalData = async (key, val) => {
 
   chrome.storage.local.set({ [key]: val }, () => {});
 };
+
+/*****************************************
+ *
+ * HELPERS
+ ******************************************/
 /**
  * Remove a link from our users jobLinks
  * @param {key:href, val:href} links
@@ -160,6 +165,8 @@ const establishConnection = (msg, fields) => {
   console.log(msg.status);
   port.postMessage({ response: "connected", ...otherFields });
 };
+
+const getUser = () => {};
 
 /*****************************************
  *
@@ -272,6 +279,7 @@ export const JOB_LINKS_WORKER = {
           jobLinkCollectionInProgress: true,
         },
       };
+
       //TODO: all local storage calls should be replace by our rest api
       await setStorageLocalData("indeed", mockInfo);
       let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=7`;

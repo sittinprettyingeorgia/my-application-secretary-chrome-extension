@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "App Genie Extension",
+  "name": "My Application Secretary Extension",
   "author": "Mitchell Blake",
   "description": "Automates the job search",
-  "homepage_url": "https://github.com/sittinprettyingeorgia/app-genie",
+  "homepage_url": "https://github.com/Blake-Software/my-application-secretary-chrome-extension",
   "permissions": [
     "tabs",
     "activeTab",
@@ -21,6 +21,7 @@
   ],
   "host_permissions": [
     "https://www.indeed.com/*",
+    "https://www.myapplicationsecretary.com",
     "https://apply.workable.com/*",
     "https://apply.indeed.com/*",
     "https://gdc.indeed.com/*",
@@ -40,13 +41,14 @@
       "https://www.indeed.com/*",
       "https://apply.workable.com/*",
       "https://gdc.indeed.com/*",
-      "https://m5.apply.indeed.com/*"
+      "https://m5.apply.indeed.com/*",
+      "https://www.myapplicationsecretary.com"
     ]
   },
   "minimum_chrome_version": "92",
   "version": "0.0.1",
   "action": {
     "default_icon": {},
-    "default_title": "App Genie"
+    "default_title": "My Application Secretary"
   }
 }
