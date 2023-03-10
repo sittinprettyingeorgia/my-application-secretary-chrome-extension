@@ -21,7 +21,7 @@
   ],
   "host_permissions": [
     "https://www.indeed.com/*",
-    "https://www.myapplicationsecretary.com",
+    "https://www.myapplicationsecretary.com/*",
     "https://apply.workable.com/*",
     "https://apply.indeed.com/*",
     "https://gdc.indeed.com/*",
@@ -42,13 +42,14 @@
       "https://apply.workable.com/*",
       "https://gdc.indeed.com/*",
       "https://m5.apply.indeed.com/*",
-      "https://www.myapplicationsecretary.com"
+      "https://www.myapplicationsecretary.com/*"
     ]
   },
   "minimum_chrome_version": "92",
   "version": "0.0.1",
   "action": {
     "default_icon": {},
+    "default_popup": "popup.html",
     "default_title": "My Application Secretary"
   }
 }

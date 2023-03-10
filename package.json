@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-amplify/ui-react": "^4.3.10",
+    "aws-amplify": "^5.0.18",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "typescript": "4.7.4"
@@ -21,7 +23,6 @@
     "@types/jest": "27.5.2",
     "@types/node": "16.11.43",
     "@vitejs/plugin-react": "2.2.0",
-    "typescript": "4.6.4",
     "vite": "3.2.3",
     "vite-plugin-checker": "0.5.1"
   }
