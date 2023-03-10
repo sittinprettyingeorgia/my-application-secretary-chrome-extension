@@ -1,25 +1,26 @@
 // Alternative to load event
 (async () => {
-  if (document.readyState === 'complete') {
+  if (document.readyState === "complete") {
     const getLinks = async () => {
       const DEFAULTS = {
-        limit: 600,
+        limit: 600, // TODO: Rate limit will be applied by cognito user pool
       };
-      const STORAGE_KEY = 'indeed';
-      const INDEED_BASE = 'https://www.indeed.com';
+      const STORAGE_KEY = "indeed";
+      const INDEED_BASE = "https://www.indeed.com";
       const INDEED_QUERY_SELECTOR = {
-        APPLY_BUTTON: '.ia-IndeedApplyButton',
-        APPLY_BUTTON_ID: '#indeedApplyButton',
-        APPLY_BUTTON_WRAPPER: '.jobsearch-IndeedApplyButton-buttonWrapper',
-        APPLY_WIDGET: '.indeed-apply-widget',
-        JOB_LINKS: '.jobTitle a',
-        NAV_CONTAINER: 'nav[role=navigation',
-        PAGINATION_ELEM1: 'a[data-testid=pagination-page-next]',
-        PAGINATION_ELEM2: 'a[aria-label=Next]',
+        APPLY_BUTTON: ".ia-IndeedApplyButton",
+        APPLY_BUTTON_ID: "#indeedApplyButton",
+        APPLY_BUTTON_WRAPPER: ".jobsearch-IndeedApplyButton-buttonWrapper",
+        APPLY_WIDGET: ".indeed-apply-widget",
+        JOB_LINKS: ".jobTitle a",
+        NAV_CONTAINER: "nav[role=navigation",
+        PAGINATION_ELEM1: "a[data-testid=pagination-page-next]",
+        PAGINATION_ELEM2: "a[aria-label=Next]",
       };
-      const COMPLETED = 'completed job-links scan';
-      const COMPLETED_PAGE = 'completed page scan';
+      const COMPLETED = "completed job-links scan";
+      const COMPLETED_PAGE = "completed page scan";
 
+      //TODO: local storage should hold the user and thier nlp model/corpus.
       const getAllStorageLocalData = (key) => {
         return new Promise((resolve, reject) => {
           chrome.storage.local.get([key], (items) => {
@@ -38,6 +39,7 @@
 
         chrome.storage.local.set({ [key]: val }, () => {});
       };
+
       /**
        * Retrieve an list of elements using a query selector
        *
@@ -124,7 +126,7 @@
           try {
             const links = retrieveElems(INDEED_QUERY_SELECTOR.JOB_LINKS);
             for (const link of links) {
-              const href = link.getAttribute('href');
+              const href = link.getAttribute("href");
 
               if (href) {
                 newJobLinks.add(href);
@@ -133,8 +135,8 @@
 
             gotoNextPage(newJobLinks);
           } catch (e) {
-            console.log('script failed', e);
-            throw new Error('script failed');
+            console.log("script failed", e);
+            throw new Error("script failed");
           }
         };
 
@@ -156,7 +158,7 @@
             stack: x.stack,
           };
 
-          const status = 'There was an error collecting job links';
+          const status = "There was an error collecting job links";
           const url = window.location.href;
           result.url = url;
           port.postMessage({ status, data: result });
@@ -172,16 +174,16 @@
 
         try {
           appInfo = {
-            ...(await getAllStorageLocalData('indeed').then((items) => items)),
+            ...(await getAllStorageLocalData("indeed").then((items) => items)),
           };
 
           if (!appInfo?.indeed?.user) {
             //TODO: window.location.replace('onboarding.html');
-            throw new Error('Please create a user');
+            throw new Error("Please create a user");
           }
         } catch (e) {
           // Handle error that occurred during storage initialization.
-          console.log('could not retrieve application information');
+          console.log("could not retrieve application information");
           console.log(e);
         }
 
@@ -199,25 +201,25 @@
        *********************************/
       const handleConnectedAction = async (port, msg) => {
         port.postMessage({
-          status: 'connection received, starting job scan',
+          status: "connection received, starting job scan",
         });
 
         await setup(port, msg.messageId);
       };
-      console.log('inside get-links');
+      console.log("inside get-links");
 
-      let port = chrome.runtime.connect({ name: 'get-links' });
-      port.postMessage({ status: 'connecting job-links messenger' });
+      let port = chrome.runtime.connect({ name: "get-links" });
+      port.postMessage({ status: "connecting job-links messenger" });
       port.onMessage.addListener(async (msg) => {
         switch (msg.response) {
-          case 'connected':
+          case "connected":
             await handleConnectedAction(port, msg);
             break;
-          case 'waiting for actionable message':
-            console.log('background did not receive message');
+          case "waiting for actionable message":
+            console.log("background did not receive message");
             break;
           default:
-            port.postMessage({ status: 'waiting for actionable message...' });
+            port.postMessage({ status: "waiting for actionable message..." });
         }
       });
     };

@@ -2,16 +2,16 @@
  *
  * CONSTANTS
  ******************************************/
-const INDEED_BASE = 'https://www.indeed.com';
-const INDEED = 'indeed';
-const GET_LINKS = 'get-links';
-const GET_LINKS_PATH = './indeed/get-links.js';
-const HANDLE_JOB_POSTING = 'handle-job-posting';
-const HANDLE_JOB_POSTING_PATH = './indeed/handle-job-posting.js';
-const HANDLE_JOB_FORM = 'handle-job-form';
-const HANDLE_JOB_FORM_PATH = './indeed/handle-job-form.js';
-const STORAGE_KEY = 'indeed';
-export const INDEED_SUFFIX = 'indeed.com';
+const INDEED_BASE = "https://www.indeed.com";
+const INDEED = "indeed";
+const GET_LINKS = "get-links";
+const GET_LINKS_PATH = "./indeed/get-links.js";
+const HANDLE_JOB_POSTING = "handle-job-posting";
+const HANDLE_JOB_POSTING_PATH = "./indeed/handle-job-posting.js";
+const HANDLE_JOB_FORM = "handle-job-form";
+const HANDLE_JOB_FORM_PATH = "./indeed/handle-job-form.js";
+const STORAGE_KEY = "indeed";
+export const INDEED_SUFFIX = "indeed.com";
 /*****************************************
  *
  * DATA STORAGE
@@ -33,6 +33,7 @@ export const getAllStorageSyncData = (key) => {
     });
   });
 };
+
 export const getAllStorageLocalData = (key) => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get([key], (items) => {
@@ -68,21 +69,21 @@ export const setStorageLocalData = async (key, val) => {
  * HELPER
  ******************************************/
 const getAxiosError = (e) => {
-  let message = '';
+  let message = "";
   let err;
 
   if (e.response) {
     message =
-      'The request was made and the server responded with a status code that falls out of the range of 2xx';
+      "The request was made and the server responded with a status code that falls out of the range of 2xx";
     err = { message, ...e.response, json: e.toJSON.toString() };
   } else if (e.request) {
     message =
-      'The request was made but no response was received `e.request` is an instance of XMLHttpRequest' +
-      ' in the browser and an instance of http.ClientRequest in node.js';
+      "The request was made but no response was received `e.request` is an instance of XMLHttpRequest" +
+      " in the browser and an instance of http.ClientRequest in node.js";
     err = { message, ...e.request, json: e.toJSON.toString() };
   } else {
     message =
-      'Something happened in setting up the request that triggered an error';
+      "Something happened in setting up the request that triggered an error";
     err = { message, json: e.toJSON.toString() };
   }
 
@@ -91,12 +92,12 @@ const getAxiosError = (e) => {
 
 const getAppInfo = async () => {
   const appInfo = {
-    ...(await getAllStorageLocalData(INDEED).then((items) => items)),
+    ...(await getAllStorageLocalData(INDEED)),
   };
 
   if (!appInfo?.indeed?.user) {
     //TODO: window.location.replace('onboarding.html');
-    throw new Error('Please create a user');
+    throw new Error("Please create a user");
   }
 
   return appInfo;
@@ -117,7 +118,7 @@ export const establishConnection = (msg, fields) => {
   const { port, ...otherFields } = fields ?? {};
 
   console.log(msg.status);
-  port.postMessage({ response: 'connected', ...otherFields });
+  port.postMessage({ response: "connected", ...otherFields });
 };
 
 /*****************************************
@@ -126,18 +127,18 @@ export const establishConnection = (msg, fields) => {
  ******************************************/
 // Event types
 export const MOUSE = {
-  CLICK: 'click',
-  DOWN: 'mousedown',
-  OVER: 'mouseover',
-  UP: 'mouseup',
+  CLICK: "click",
+  DOWN: "mousedown",
+  OVER: "mouseover",
+  UP: "mouseup",
 };
 
 export const HTML_ELEMENT = {
-  BUTTON: 'button',
+  BUTTON: "button",
 };
 
 const triggerMouseEvent = (node, eventType) => {
-  var clickEvent = document.createEvent('MouseEvents');
+  var clickEvent = document.createEvent("MouseEvents");
   clickEvent.initEvent(eventType, true, true);
   node.dispatchEvent(clickEvent);
 };
@@ -160,10 +161,10 @@ export const REGEX = {
   CONTAINS_JOB_FORM: /\bhttps:\/\/m5.apply.indeed.com\/\b/gi,
   CONTAINS_JOB_POSTING: /\bhttps:\/\/www.indeed.com\/viewjob\b/gi,
   CONTAINS_JOBS_LINKS: /\bhttps:\/\/www.indeed.com\/jobs\b/gi,
-  JOB_FORM_URL: 'https://m5.apply.indeed.com/',
-  JOB_LINK_URL: 'indeed.com/jobs',
-  JOB_POSTING_URL: 'indeed.com/viewjob',
-  JOB_WINDOW: 'https://www.indeed.com/jobs?q=software&l=Remote&fromage=7',
+  JOB_FORM_URL: "https://m5.apply.indeed.com/",
+  JOB_LINK_URL: "indeed.com/jobs",
+  JOB_POSTING_URL: "indeed.com/viewjob",
+  JOB_WINDOW: "https://www.indeed.com/jobs?q=software&l=Remote&fromage=7",
 };
 
 export const handleTabChange = async () => {

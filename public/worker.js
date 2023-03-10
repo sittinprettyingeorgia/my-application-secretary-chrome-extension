@@ -1,13 +1,13 @@
-const INDEED_SUFFIX = 'indeed.com';
-const INDEED_BASE = 'https://www.indeed.com';
-const INDEED = 'indeed';
-const GET_LINKS = 'get-links';
-const GET_LINKS_PATH = './indeed/get-links.js';
-const HANDLE_JOB_POSTING = 'handle-job-posting';
-const HANDLE_JOB_POSTING_PATH = './indeed/handle-job-posting.js';
-const HANDLE_JOB_FORM = 'handle-job-form';
-const HANDLE_JOB_FORM_PATH = './indeed/handle-job-form.js';
-const STORAGE_KEY = 'indeed';
+const INDEED_SUFFIX = "indeed.com";
+const INDEED_BASE = "https://www.indeed.com";
+const INDEED = "indeed";
+const GET_LINKS = "get-links";
+const GET_LINKS_PATH = "./indeed/get-links.js";
+const HANDLE_JOB_POSTING = "handle-job-posting";
+const HANDLE_JOB_POSTING_PATH = "./indeed/handle-job-posting.js";
+const HANDLE_JOB_FORM = "handle-job-form";
+const HANDLE_JOB_FORM_PATH = "./indeed/handle-job-form.js";
+const STORAGE_KEY = "indeed";
 /*****************************************
  *
  * MESSAGING
@@ -22,17 +22,17 @@ export const handleMessaging = (port) => {
 
   port.onMessage.addListener(async (msg) => {
     switch (port.name) {
-      case 'get-links':
+      case "get-links":
         JOB_LINKS_WORKER.handleJobLinkMessaging(msg, port, messageId);
         break;
-      case 'handle-job-posting':
+      case "handle-job-posting":
         JOB_POSTING_WORKER.handleJobPostingMessaging(msg, port, messageId);
         break;
-      case 'handle-job-form':
+      case "handle-job-form":
         JOB_FORM_WORKER.handleJobFormMessaging(msg, port, messageId);
         break;
       default:
-        console.log('waiting for message', msg);
+        console.log("waiting for message", msg);
     }
   });
 };
@@ -41,7 +41,7 @@ export const handleMessaging = (port) => {
  *
  * STORAGE
  ******************************************/
-const getAllStorageLocalData = (key) => {
+const getAllStorageLocalData = async (key) => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get([key], (items) => {
       if (chrome.runtime.lastError) {
@@ -72,7 +72,7 @@ const deleteHrefAndGoToNext = async () => {
       !appInfo.indeed.user?.jobLinks ||
       appInfo.indeed.user?.jobLinks.length < 1
     ) {
-      throw new Error('No job links stored');
+      throw new Error("No job links stored");
     }
 
     const user = appInfo.indeed.user;
@@ -90,7 +90,7 @@ const deleteHrefAndGoToNext = async () => {
     await chrome.tabs.create({ url });
   } catch (e) {
     // Handle error that occurred during storage initialization.
-    console.log('could not retrieve application information');
+    console.log("could not retrieve application information");
     console.log(e);
   }
 };
@@ -111,9 +111,9 @@ const updateAppInfo = async (newAppInfo) => {
   if (questions) {
     let answers;
     try {
-      const answerResponse = await fetch('/1/answers', {
-        method: 'POST',
-        method: 'cors',
+      const answerResponse = await fetch("/1/answers", {
+        method: "POST",
+        method: "cors",
         body: JSON.stringify({ questions }),
       });
       appInfo.indeed.user.currentAnswers = { ...(await answerResponse.json()) };
@@ -135,10 +135,17 @@ const getAppInfo = async () => {
 
   if (!appInfo?.indeed?.user) {
     //TODO: window.location.replace('onboarding.html');
-    throw new Error('Please create a user');
+    throw new Error("Please create a user");
   }
 
   return appInfo;
+};
+
+const getCurrentTab = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
 };
 
 const getTabAndAppInfo = async () => {
@@ -151,7 +158,7 @@ const establishConnection = (msg, fields) => {
   const { port, ...otherFields } = fields ?? {};
 
   console.log(msg.status);
-  port.postMessage({ response: 'connected', ...otherFields });
+  port.postMessage({ response: "connected", ...otherFields });
 };
 
 /*****************************************
@@ -162,29 +169,29 @@ export const JOB_FORM_WORKER = {
   main: async (tab) => {
     try {
       const [appInfo, _tab] = await getTabAndAppInfo();
-      console.log('I am running script inside of indeed form HOE!');
+      console.log("I am running script inside of indeed form HOE!");
     } catch (e) {
       console.log(e);
     }
   },
   filter: {
-    url: [{ hostSuffix: INDEED_SUFFIX, pathContains: 'beta' }],
+    url: [{ hostSuffix: INDEED_SUFFIX, pathContains: "beta" }],
   },
   handleJobFormMessaging: async (msg, port, messageId) => {
     const appInfo = await getAppInfo();
 
     switch (msg.status) {
-      case 'connecting handle-job-form messenger':
+      case "connecting handle-job-form messenger":
         establishConnection(msg, { port, messageId, appInfo });
         break;
-      case 'completed handle-job-form':
+      case "completed handle-job-form":
         //content-script has completed job form
         break;
-      case 'connection received, handling job form':
+      case "connection received, handling job form":
         console.log(msg.status);
         break;
-      case 'waiting for message':
-        console.log('script did not receive background message');
+      case "waiting for message":
+        console.log("script did not receive background message");
       default:
         console.log(msg.debug);
     }
@@ -206,7 +213,7 @@ export const JOB_POSTING_WORKER = {
         !appInfo?.indeed?.user?.jobLinks ||
         !appInfo?.indeed?.user?.jobLinks.length < 1
       ) {
-        throw new Error('There are no job links available');
+        throw new Error("There are no job links available");
       }
 
       let jobLinks = appInfo.indeed.user.jobLinks;
@@ -221,25 +228,25 @@ export const JOB_POSTING_WORKER = {
     }
   },
   filter: {
-    url: [{ hostSuffix: INDEED_SUFFIX, pathContains: 'viewjob' }],
+    url: [{ hostSuffix: INDEED_SUFFIX, pathContains: "viewjob" }],
   },
   handleJobPostingMessaging: (msg, port, messageId) => {
     switch (msg.status) {
-      case 'connecting handle-job-posting messenger':
+      case "connecting handle-job-posting messenger":
         establishConnection(msg, { port, messageId });
         break;
-      case 'job posting is not valid': //TODO: we cannot get messages from content script apply-now
+      case "job posting is not valid": //TODO: we cannot get messages from content script apply-now
         deleteHrefAndGoToNext();
         break;
-      case 'completed handle-job-posting':
+      case "completed handle-job-posting":
         //content-script has scanned all applications; we can move on
         break;
-      case 'current app-info':
+      case "current app-info":
         updateAppInfo(msg.data);
         break;
-      case 'connection received, handling job posting':
+      case "connection received, handling job posting":
         break;
-      case 'waiting for message':
+      case "waiting for message":
         break;
       default:
     }
@@ -254,11 +261,10 @@ export const JOB_LINKS_WORKER = {
   main: async () => {
     try {
       let mockInfo = {
-        applicationName: 'indeed',
         user: {
-          userId: '1',
-          firstName: 'Mitchell',
-          lastName: 'Blake',
+          userId: "1",
+          firstName: "Mitchell",
+          lastName: "Blake",
           jobLinks: [],
           jobPreferences: {
             jobLinksLimit: 60,
@@ -267,7 +273,7 @@ export const JOB_LINKS_WORKER = {
         },
       };
       //TODO: all local storage calls should be replace by our rest api
-      await setStorageLocalData('indeed', mockInfo);
+      await setStorageLocalData("indeed", mockInfo);
       let url = `https://www.indeed.com/jobs?q=software&l=Remote&fromage=7`;
       await chrome.tabs.create({ url });
     } catch (e) {
@@ -275,20 +281,20 @@ export const JOB_LINKS_WORKER = {
     }
   },
   filter: {
-    url: [{ hostSuffix: INDEED_SUFFIX, pathContains: 'jobs' }],
+    url: [{ hostSuffix: INDEED_SUFFIX, pathContains: "jobs" }],
   },
   handleJobLinkMessaging: (msg, port, messageId) => {
     switch (msg.status) {
-      case 'connecting job-links messenger':
+      case "connecting job-links messenger":
         establishConnection(msg, { port, messageId });
         break;
-      case 'completed job-links scan':
+      case "completed job-links scan":
         //content-script has scanned all job pages and stored info
         //we can move on to apply now
         break;
-      case 'connection received, starting job scan':
+      case "connection received, starting job scan":
         break;
-      case 'waiting for message':
+      case "waiting for message":
         break;
       default:
     }
