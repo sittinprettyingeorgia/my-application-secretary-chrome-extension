@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-myappsecchrome-dev-160317-authRole",
+      "UnauthRoleArn": "arn:aws:iam::280695598000:role/amplify-myappsecchrome-dev-160317-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::280695598000:role/amplify-myappsecchrome-dev-160317-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-myappsecchrome-dev-160317-deployment",
+      "UnauthRoleName": "amplify-myappsecchrome-dev-160317-unauthRole",
+      "StackName": "amplify-myappsecchrome-dev-160317",
+      "StackId": "arn:aws:cloudformation:us-east-1:280695598000:stack/amplify-myappsecchrome-dev-160317/228f6990-bfa0-11ed-b894-0eebe82d8f47",
+      "AmplifyAppId": "d2u44ursjoat6x"
+    }
+  }
+}
