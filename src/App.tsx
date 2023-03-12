@@ -7,6 +7,7 @@ import {
   WithAuthenticatorProps,
 } from "@aws-amplify/ui-react";
 import { SignInHeader, Header, Footer, SignInFooter } from "./login";
+import awsconfig from "./aws-exports";
 
 Amplify.configure({
   Auth: {
@@ -75,7 +76,17 @@ const App = ({ isPassedToWithAuthenticator, signOut, user }: Props) => {
   );
 };
 
-export default withAuthenticator(App);
+export default withAuthenticator(App, {
+  components: {
+    //Header: Header, this should be custom logo
+    SignIn: {
+      Header: SignInHeader,
+      Footer: SignInFooter,
+    },
+    Footer,
+  },
+  socialProviders: ["google"], //TODO: add facebook, apple, amazon, etc logins.
+});
 
 export async function getStaticProps() {
   return {
