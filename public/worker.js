@@ -297,8 +297,8 @@ export const JOB_LINKS_WORKER = {
         establishConnection(msg, { port, messageId });
         break;
       case "completed job-links scan":
-        //content-script has scanned all job pages and stored info
-        //we can move on to apply now
+        // content-script has scanned all job pages and stored info
+        // we can move on to apply now
         break;
       case "connection received, starting job scan":
         break;

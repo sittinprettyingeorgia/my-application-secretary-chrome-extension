@@ -1,15 +1,29 @@
-/*global chrome*/
-import { handleTabChange } from './util.js';
+// /*global chrome*/
+import { handleTabChange } from "./util.js";
 import {
   JOB_LINKS_WORKER,
   JOB_POSTING_WORKER,
   JOB_FORM_WORKER,
   handleMessaging,
-} from './worker.js';
+} from "./worker.js";
+
 /********************************************************************************************
  *
  * SERVICE WORKER CONSTANTS
  ********************************************************************************************/
+chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+  let result = await chrome.scripting.executeScript({
+    target: { tabId: tabs[0].id },
+    function: async () => {
+      const nodeNlpModule = await import(
+        "https://unpkg.com/node-nlp/dist/node-nlp.min.js"
+      );
+      // use the node-nlp module here
+      console.log(nodeNlpModule);
+    },
+  });
+  console.log(result);
+});
 
 /*****************************************
  *
