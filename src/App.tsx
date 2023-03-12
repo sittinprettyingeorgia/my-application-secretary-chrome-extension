@@ -10,6 +10,7 @@ import { SignInHeader, Header, Footer, SignInFooter } from "./login";
 import awsconfig from "./aws-exports";
 
 Amplify.configure({
+  ...awsconfig,
   Auth: {
     // REQUIRED only for Federated Authentication - Amazon Cognito Identity Pool ID
     identityPoolId: "us-east-1:0d0eb3be-0186-4f11-9863-44d32f45b070",
