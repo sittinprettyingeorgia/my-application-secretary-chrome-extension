@@ -1,0 +1,56 @@
+@import "@aws-amplify/ui-react/styles.css";
+
+@import url("https://fonts.googleapis.com/css2?family=Josefin+Slab");
+
+:root {
+  /*PALETTE*/
+
+  /*PRIMARY*/
+  --amplify-primary-color: hsl(206, 40%, 13%);
+  --amplify-colors-brand-primary-10: hsl(203, 39%, 44%);
+
+  /*SECONDARY*/
+  --amplify-secondary-color: hsl(182, 43%, 76%);
+  --amplify-colors-brand-secondary-10: hsl(105, 55%, 96%);
+
+  --amplify-colors-radii-small: 0;
+  --amplify-colors-radii-medium: 2px;
+  --amplify-colors-radii-large: 4px;
+  --amplify-colors-border-primary: var(--amplify-colors-neutral-40);
+  --amplify-colors-border-secondary: var(--amplify-colors-neutral-20);
+  --amplify-colors-border-tertiary: var(--amplify-colors-neutral-10);
+  --amplify-colors-background-secondary: var(--amplify-secondary-color);
+
+  /*TYPOGRAPHY*/
+  --amplify-fonts-default-variable: "Josefin Slab";
+  --amplify-fonts-default-static: "Josefin Slab";
+  --amplify-colors-font-primary: hsl(206, 40%, 13%);
+
+  /*COMPONENTS*/
+  --amplify-components-text-primary-color: hsl(206, 40%, 13%);
+  --amplify-components-text-color: hsl(206, 40%, 13%);
+  --amplify-components-tabs-item-border-color: var(
+    --amplify-colors-brand-primary-100
+  );
+
+  /*BUTTON*/
+  --amplify-components-button-color: var(--amplify-secondary-color);
+  --amplify-components-button-primary-background-color: var(
+    --amplify-secondary-color
+  );
+  --amplify-components-button-active-background-color: var(
+    --amplify-secondary-color
+  );
+  --amplify-components-button-hover-color: var(--amplify-primary-color);
+
+  /*BORDERS*/
+  --amplify-radii-small: 0;
+  --amplify-radii-medium: 0;
+  --amplify-radii-large: 0;
+  --amplify-space-small: 1rem;
+  --amplify-space-medium: 1.5rem;
+  --amplify-space-large: 2rem;
+  --amplify-border-widths-small: 2px;
+  --amplify-border-widths-medium: 4px;
+  --amplify-border-widths-large: 8px;
+}

@@ -17,6 +17,12 @@ Amplify.configure({
 
     // REQUIRED - Amazon Cognito Region
     region: "us-east-1",
+
+    // OPTIONAL - Amazon Cognito User Pool ID
+    userPoolId: "us-east-1_r0KOVwzLe",
+
+    // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
+    userPoolWebClientId: "s3cn4kmffrljtshjbod7vue3i",
   },
   oauth: {
     domain: "nzsfjm18d6cv-dev.auth.us-east-1.amazoncognito.com",
@@ -34,6 +40,7 @@ Amplify.configure({
     responseType: "code",
   },
 });
+
 // You can get the current config object
 const currentConfig = Auth.configure();
 
@@ -72,7 +79,13 @@ const App = ({ isPassedToWithAuthenticator, signOut, user }: Props) => {
 
   return (
     <main>
-      <Box>WELCOME!!!</Box>
+      <ThemeProvider theme={theme}>
+        <StyledThemeProvider theme={theme}>
+          <UserContext.Provider value={{ user: appUser, signOut }}>
+            <Box>WELCOME!!!</Box>
+          </UserContext.Provider>
+        </StyledThemeProvider>
+      </ThemeProvider>
     </main>
   );
 };
