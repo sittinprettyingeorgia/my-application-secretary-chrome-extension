@@ -7,6 +7,21 @@ import {
   handleMessaging,
 } from "./worker.js";
 
+const ws = new WebSocket("ws://localhost:8080");
+
+ws.onopen = () => {
+  console.log("WebSocket connection opened");
+};
+
+ws.onmessage = (event) => {
+  console.log("Received message:", event.data);
+  chrome.runtime.sendMessage(event.data);
+};
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Received message from React app:", message);
+  ws.send(JSON.stringify(message));
+});
 /********************************************************************************************
  *
  * SERVICE WORKER CONSTANTS

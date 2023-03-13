@@ -49,7 +49,6 @@
   "version": "0.0.1",
   "action": {
     "default_icon": {},
-    "default_popup": "popup.html",
     "default_title": "My Application Secretary"
   }
 }

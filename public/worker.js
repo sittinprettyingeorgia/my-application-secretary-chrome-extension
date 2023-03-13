@@ -22,6 +22,9 @@ export const handleMessaging = (port) => {
 
   port.onMessage.addListener(async (msg) => {
     switch (port.name) {
+      case "my-application-secretary":
+        MY_APP_SEC_WORKER.handleMyAppSecMessaging(msg, port, messageId);
+        break;
       case "get-links":
         JOB_LINKS_WORKER.handleJobLinkMessaging(msg, port, messageId);
         break;
@@ -166,8 +169,6 @@ const establishConnection = (msg, fields) => {
   port.postMessage({ response: "connected", ...otherFields });
 };
 
-const getUser = () => {};
-
 /*****************************************
  *
  * JOB-FORM
@@ -301,6 +302,27 @@ export const JOB_LINKS_WORKER = {
         // we can move on to apply now
         break;
       case "connection received, starting job scan":
+        break;
+      case "waiting for message":
+        break;
+      default:
+    }
+  },
+};
+
+/*****************************************
+ *
+ * MY APPLICATION SECRETARY
+ ******************************************/
+export const MY_APP_SEC_WORKER = {
+  handleMyAppSecMessaging: (msg, port, messageId) => {
+    switch (msg.status) {
+      case "connecting my-application-secretary messenger":
+        establishConnection(msg, { port, messageId });
+        break;
+      case "start applying":
+        // user has clicked the start applying button
+        startApplying(msg, { port, messageId });
         break;
       case "waiting for message":
         break;
