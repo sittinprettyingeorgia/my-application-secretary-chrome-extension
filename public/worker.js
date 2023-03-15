@@ -8,17 +8,25 @@ const HANDLE_JOB_POSTING_PATH = "./indeed/handle-job-posting.js";
 const HANDLE_JOB_FORM = "handle-job-form";
 const HANDLE_JOB_FORM_PATH = "./indeed/handle-job-form.js";
 const STORAGE_KEY = "indeed";
+
 /*****************************************
  *
  * MESSAGING
  ******************************************/
 // handleExtensionMessagingTo/From content scripts
-export const handleMessaging = (port) => {
+export const handleMessaging = (port, socket, connectWSS) => {
   // Asynchronously retrieve data from storage.sync, then cache it.
   // Generate a random 4-char key to avoid clashes if called multiple times
   let messageId = Math.floor((1 + Math.random()) * 0x10000)
     .toString(16)
     .substring(1);
+
+  if (socket?.readyState === WebSocket?.OPEN) {
+    socket.send("test1");
+  } else {
+    connectWSS();
+    socket.send("test2");
+  }
 
   port.onMessage.addListener(async (msg) => {
     switch (port.name) {

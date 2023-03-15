@@ -12,6 +12,7 @@ const HANDLE_JOB_FORM = "handle-job-form";
 const HANDLE_JOB_FORM_PATH = "./indeed/handle-job-form.js";
 const STORAGE_KEY = "indeed";
 export const INDEED_SUFFIX = "indeed.com";
+
 /*****************************************
  *
  * DATA STORAGE
@@ -75,16 +76,14 @@ const getAxiosError = (e) => {
   if (e.response) {
     message =
       "The request was made and the server responded with a status code that falls out of the range of 2xx";
-    err = { message, ...e.response, json: e.toJSON.toString() };
+    err = { message, ...e.response };
   } else if (e.request) {
-    message =
-      "The request was made but no response was received `e.request` is an instance of XMLHttpRequest" +
-      " in the browser and an instance of http.ClientRequest in node.js";
-    err = { message, ...e.request, json: e.toJSON.toString() };
+    message = "The request was made but no response was received";
+    err = { message, ...e.request };
   } else {
     message =
       "Something happened in setting up the request that triggered an error";
-    err = { message, json: e.toJSON.toString() };
+    err = { message };
   }
 
   return err;

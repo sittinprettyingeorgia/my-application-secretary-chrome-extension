@@ -7,20 +7,32 @@ import {
   handleMessaging,
 } from "./worker.js";
 
-const ws = new WebSocket("ws://localhost:8080");
+let socket;
 
-ws.onopen = () => {
-  console.log("WebSocket connection opened");
+const connectWSS = () => {
+  //TODO: env var
+  socket = new WebSocket("ws://localhost:8080");
+
+  socket.addEventListener("open", (event) => {
+    console.log("Connected to server");
+  });
+
+  socket.addEventListener("message", (event) => {
+    console.log("Received message:", event.data);
+  });
+
+  socket.addEventListener("close", (event) => {
+    console.log("Disconnected from server");
+    setTimeout(() => {
+      connectWSS();
+    }, 1000);
+  });
 };
 
-ws.onmessage = (event) => {
-  console.log("Received message:", event.data);
-  chrome.runtime.sendMessage(event.data);
-};
+const handleMessagingWSS = handleMessaging.bind(null, socket, connectWSS);
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("Received message from React app:", message);
-  ws.send(JSON.stringify(message));
+  sendWSSMessage("testbk");
 });
 /********************************************************************************************
  *
@@ -48,7 +60,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
  ******************************************/
 
 //this is where we communicate with our content scripts.
-chrome.runtime.onConnect.addListener(handleMessaging);
+chrome.runtime.onConnect.addListener(handleMessagingWSS);
 
 //this is our extension icon click response
 chrome.action.onClicked.addListener(JOB_LINKS_WORKER.main);
