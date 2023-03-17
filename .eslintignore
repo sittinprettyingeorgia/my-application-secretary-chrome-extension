@@ -1,0 +1,5 @@
+src/models
+public/*
+node_modules/*
+.vscode
+src/**/*.test.ts

@@ -13,6 +13,7 @@ dist-ssr
 *.local
 latestBuild
 example.js
+public/corpus
 
 # Editor directories and files
 .vscode/*
