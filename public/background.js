@@ -42,12 +42,12 @@ chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
   let result = await chrome.scripting.executeScript({
     target: { tabId: tabs[0].id },
     function: async () => {
-      const nodeNlpModule = await import(
+      const nlpModule = await import(
         "https://unpkg.com/node-nlp/dist/node-nlp.min.js"
       );
       // use the node-nlp module here
       console.log("inside");
-      console.log(nodeNlpModule);
+      console.log(nlpModule);
     },
   });
   console.log(result);
